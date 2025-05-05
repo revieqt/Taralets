@@ -1,6 +1,7 @@
 import { Dimensions, StyleSheet, TouchableOpacity, Text, View , Image} from 'react-native';
 import Animated, { useAnimatedRef, useAnimatedStyle, useScrollViewOffset, useSharedValue, interpolate, withTiming } from 'react-native-reanimated';
 
+
 import { ThemedView } from '@/components/ThemedView';
 import { useBottomTabOverflow } from '@/components/ui/TabBarBackground';
 import { useState, useEffect } from 'react';

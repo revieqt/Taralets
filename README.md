@@ -1,50 +1,71 @@
-# Welcome to your Expo app 👋
+# TaraApp 🚀
+**Your Ultimate Travel Companion App**
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+TaraApp is a mobile application designed to enhance group travel experiences by integrating real-time geolocation, weather forecasts, trip planning, emergency alerts, and group coordination into one powerful app. Built with **React Native** using **Expo**, **Node.js**, **Firebase**, and **CouchDB**, TaraApp ensures a seamless travel experience—online or offline.
 
-## Get started
+---
 
-1. Install dependencies
+## 📱 Features
 
-   ```bash
-   npm install
-   ```
+### 🗺 Location & Navigation
+- Live GPS tracking of individual and group members
+- Set routes from Point A to B with estimated time and distance
+- Transport mode selection: Walk, Bike, Car, etc.
 
-2. Start the app
+### 🌦 Weather Integration
+- Real-time weather info using **Open-Meteo API**
+- Weekly and monthly forecasts
+- Weather alerts for planned trips
 
-   ```bash
-    npx expo start
-   ```
+### 🧳 Itineraries
+- Create, edit, and delete personal or group itineraries
+- Add places of interest
+- Cache itineraries for offline access
 
-In the output, you'll find options to open the app in a
+### 👥 Group Travel
+- Create and manage travel groups
+- Share live location with group members
+- Real-time group chat feature
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+### 🚨 Emergency Alert System
+- One-tap emergency button
+- Auto-SMS to registered emergency contact
+- Shows nearest hospital, police, and fire stations
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### 🔐 User Authentication
+- Sign in with:
+  - Google (OAuth 2.0)
+  - Facebook
+  - Email/Password
+  - Guest/Anonymous login
+- Two-Factor Authentication (Gmail users)
 
-## Get a fresh project
+---
 
-When you're ready, run:
+## 🧰 Tech Stack
+
+| Layer | Tools |
+|------|-------|
+| Frontend | React Native (Expo), Leaflet.js |
+| Backend | Node.js, Express.js |
+| Auth | Firebase Authentication |
+| Database | CouchDB (Cloud), AsyncStorage (Offline) |
+| Maps | OpenStreetMap (via Leaflet & Nominatim) |
+| Weather API | Open-Meteo |
+| Location | Expo Location |
+| Messaging | Socket.IO (for group chat and live location sharing) |
+
+---
+
+## 📦 Installation
 
 ```bash
-npm run reset-project
-```
+# Clone the repo
+git clone https://github.com/your-username/TaraApp.git
+cd TaraApp
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+# Install dependencies
+npm install
 
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+# Start the Expo server
+npx expo start
