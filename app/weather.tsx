@@ -1,9 +1,20 @@
-import React, { useEffect, useState } from "react";
-import { StyleSheet, View, Text, ActivityIndicator, ScrollView, TouchableOpacity } from "react-native";
+import React, { useEffect, useState, useRef } from "react";
+import {
+  StyleSheet,
+  View,
+  Text,
+  TouchableOpacity,
+  ImageBackground,
+  Image,
+  ScrollView,
+} from "react-native";
 import { Picker } from "@react-native-picker/picker";
-import { ThemedView } from "@/components/ThemedView";
-import { getWeather, getHourlyWeather } from "@/services/weatherService";
-import LineGraph from "@/components/LineGraph";
+import AntDesign from "@expo/vector-icons/AntDesign";
+import Feather from "@expo/vector-icons/Feather";
+import Fontisto from "@expo/vector-icons/Fontisto";
+import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
+import { getWeather } from "../services/weatherService";
 
 export default function WeatherScreen() {
   const cities = [
@@ -14,16 +25,48 @@ export default function WeatherScreen() {
 
   const [selectedCity, setSelectedCity] = useState(cities[0]);
   const [weatherData, setWeatherData] = useState<any>(null);
+  const [weeklyData, setWeeklyData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const scrollViewRef = useRef<ScrollView>(null); // Reference for the ScrollView
+  let color = "#fff";
 
-  // For hourly graph
-  const [selectedGraph, setSelectedGraph] = useState<'temperature' | 'precipitation' | 'humidity' | 'windSpeed'>('temperature');
-  const [hourlyData, setHourlyData] = useState<number[]>([]);
-  const [hourlyLoading, setHourlyLoading] = useState(false);
+  const getBackgroundImage = () => {
+    const weatherCode = weatherData?.weatherCode;
+    const currentHour = new Date().getHours();
+    const isNight = currentHour >= 18 || currentHour < 6;
 
-  // Labels for 24 hours
-  const hourLabels = Array.from({ length: 24 }, (_, i) => `${i}:00`);
+    if (isNight) {
+      return require("../assets/images/weather/night.png");
+      color = "#000";
+    }
+
+    if ([0, 1, 2, 3].includes(weatherCode)) {
+      return require("../assets/images/weather/sunny.png");
+    }
+
+    if (
+      [
+        51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82,
+      ].includes(weatherCode)
+    ) {
+      return require("../assets/images/weather/rainy.png");
+    }
+
+    if ([95, 96, 99].includes(weatherCode)) {
+      return require("../assets/images/weather/thunderstorm.png");
+    }
+
+    return require("../assets/images/weather/sunny.png");
+  };
+
+  const scrollLeft = () => {
+    scrollViewRef.current?.scrollTo({ x: 0, animated: true });
+  };
+
+  const scrollRight = () => {
+    scrollViewRef.current?.scrollToEnd({ animated: true });
+  };
 
   useEffect(() => {
     const fetchWeather = async () => {
@@ -31,18 +74,19 @@ export default function WeatherScreen() {
       setErrorMessage(null);
       try {
         const today = new Date();
+        const year = today.getFullYear();
         const month = today.getMonth() + 1;
         const day = today.getDate();
-        const year = today.getFullYear();
 
-        // Fetch all weather values in parallel
-        const [temperature, precipitation, humidity, windSpeed, weatherType] = await Promise.all([
-          getWeather.temperature(month, day, year, selectedCity.lat, selectedCity.lon),
-          getWeather.precipitation(month, day, year, selectedCity.lat, selectedCity.lon),
-          getWeather.humidity(month, day, year, selectedCity.lat, selectedCity.lon),
-          getWeather.windSpeed(month, day, year, selectedCity.lat, selectedCity.lon),
-          getWeather.weatherType(month, day, year, selectedCity.lat, selectedCity.lon),
-        ]);
+        // Fetch current weather data
+        const [temperature, precipitation, humidity, windSpeed, weatherType] =
+          await Promise.all([
+            getWeather.temperature(month, day, year, selectedCity.lat, selectedCity.lon),
+            getWeather.precipitation(month, day, year, selectedCity.lat, selectedCity.lon),
+            getWeather.humidity(month, day, year, selectedCity.lat, selectedCity.lon),
+            getWeather.windSpeed(month, day, year, selectedCity.lat, selectedCity.lon),
+            getWeather.weatherType(month, day, year, selectedCity.lat, selectedCity.lon),
+          ]);
 
         setWeatherData({
           temperature,
@@ -51,8 +95,37 @@ export default function WeatherScreen() {
           windSpeed,
           weatherType,
         });
+
+        // Fetch weekly weather data
+        const weeklyDataPromises = [];
+        for (let i = 0; i < 7; i++) {
+          const date = new Date();
+          date.setDate(today.getDate() + i);
+          const weekDay = date.toLocaleDateString("en-US", { weekday: "long" });
+          const weekMonth = date.getMonth() + 1;
+          const weekDayNum = date.getDate();
+          const weekYear = date.getFullYear();
+
+          weeklyDataPromises.push(
+            Promise.all([
+              getWeather.temperature(weekMonth, weekDayNum, weekYear, selectedCity.lat, selectedCity.lon),
+              getWeather.precipitation(weekMonth, weekDayNum, weekYear, selectedCity.lat, selectedCity.lon),
+              getWeather.humidity(weekMonth, weekDayNum, weekYear, selectedCity.lat, selectedCity.lon),
+              getWeather.windSpeed(weekMonth, weekDayNum, weekYear, selectedCity.lat, selectedCity.lon),
+            ]).then(([temperature, precipitation, humidity, windSpeed]) => ({
+              day: weekDay,
+              temperature,
+              precipitation,
+              humidity,
+              windSpeed,
+            }))
+          );
+        }
+
+        const weeklyDataResults = await Promise.all(weeklyDataPromises);
+        setWeeklyData(weeklyDataResults);
       } catch (error) {
-        setErrorMessage("Failed to fetch weather.");
+        setErrorMessage("Failed to fetch weather data.");
       } finally {
         setLoading(false);
       }
@@ -61,225 +134,307 @@ export default function WeatherScreen() {
     fetchWeather();
   }, [selectedCity]);
 
-  // Fetch hourly data for the selected graph type
-  useEffect(() => {
-    const fetchHourly = async () => {
-      setHourlyLoading(true);
-      try {
-        const today = new Date();
-        const month = today.getMonth() + 1;
-        const day = today.getDate();
-        const year = today.getFullYear();
-        const lat = selectedCity.lat;
-        const lon = selectedCity.lon;
+  const renderWeatherIcon = () => {
+    const weatherCode = weatherData?.weatherCode;
+    const currentHour = new Date().getHours();
+    const isNight = currentHour >= 18 || currentHour < 6;
 
-        let fetchFn;
-        switch (selectedGraph) {
-          case "temperature":
-            fetchFn = getHourlyWeather.temperature;
-            break;
-          case "precipitation":
-            fetchFn = getHourlyWeather.precipitation;
-            break;
-          case "humidity":
-            fetchFn = getHourlyWeather.humidity;
-            break;
-          case "windSpeed":
-            fetchFn = getHourlyWeather.windSpeed;
-            break;
-        }
+    if ([0, 1, 2, 3].includes(weatherCode)) {
+      return isNight ? (
+        <Feather name="moon" size={50} color={color} />
+      ) : (
+        <Fontisto name="day-sunny" size={50} color={color} />
+      );
+    }
 
-        // Fetch all 24 hours in parallel
-        const data = await Promise.all(
-          Array.from({ length: 24 }, (_, hour) =>
-            fetchFn(hour, day, month, year, lat, lon)
-          )
-        );
-        setHourlyData(data.map(val => (val !== null && val !== undefined ? Number(val) : 0)));
-      } catch (e) {
-        setHourlyData([]);
-      } finally {
-        setHourlyLoading(false);
-      }
-    };
+    if ([45, 48].includes(weatherCode)) {
+      return <Feather name="cloud" size={50} color={color} />;
+    }
 
-    fetchHourly();
-  }, [selectedCity, selectedGraph]);
+    if ([51, 53, 55, 56, 57].includes(weatherCode)) {
+      return <Feather name="cloud-drizzle" size={50} color={color} />;
+    }
+
+    if ([61, 63, 65, 66, 67, 80, 81, 82].includes(weatherCode)) {
+      return <Feather name="cloud-rain" size={50} color={color} />;
+    }
+
+    if ([95, 96, 99].includes(weatherCode)) {
+      return <Feather name="cloud-lightning" size={50} color={color} />;
+    }
+
+    return <Fontisto name="day-sunny" size={50} color={color} />;
+  };
 
   return (
-    <ThemedView style={styles.container}>
-      <View style={styles.dropdownContainer}>
-        <Picker
-          selectedValue={selectedCity.name}
-          onValueChange={(itemValue) => {
-            const city = cities.find((c) => c.name === itemValue);
-            if (city) setSelectedCity(city);
-          }}
-          style={styles.picker}
-          itemStyle={styles.pickerItem}
-        >
-          {cities.map((city) => (
-            <Picker.Item key={city.name} label={city.name} value={city.name} />
-          ))}
-        </Picker>
-      </View>
+    <ImageBackground
+      source={getBackgroundImage()}
+      style={styles.backgroundImage}
+      resizeMode="cover"
+    >
+      <TouchableOpacity
+        onPress={() => router.replace("/home")}
+        style={{
+          padding: 20,
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+        }}
+      >
+        <AntDesign color={color} size={24} name={"left"} />
+        <Text style={{ color, fontSize: 15 }}>Back</Text>
+      </TouchableOpacity>
 
-      <View style={styles.weatherCard}>
-        {loading ? (
-          <ActivityIndicator size="large" color="#205781" />
-        ) : errorMessage ? (
-          <Text style={styles.errorText}>{errorMessage}</Text>
-        ) : weatherData ? (
-          <>
-            <Text style={styles.temperatureText}>
-              {weatherData.temperature !== undefined && weatherData.temperature !== null
-                ? `${weatherData.temperature}°C`
-                : "--"}
-            </Text>
-            <Text style={styles.weatherDescText}>
-              {weatherData.weatherType || "--"}
-            </Text>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Precipitation: </Text>
-              <Text style={styles.infoValue}>
-                {weatherData.precipitation !== undefined && weatherData.precipitation !== null
-                  ? `${weatherData.precipitation} mm`
-                  : "--"}
-              </Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Humidity: </Text>
-              <Text style={styles.infoValue}>
-                {weatherData.humidity !== undefined && weatherData.humidity !== null
-                  ? `${weatherData.humidity}%`
-                  : "--"}
-              </Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Wind Speed: </Text>
-              <Text style={styles.infoValue}>
-                {weatherData.windSpeed !== undefined && weatherData.windSpeed !== null
-                  ? `${weatherData.windSpeed} m/s`
-                  : "--"}
-              </Text>
-            </View>
-          </>
-        ) : (
-          <Text style={styles.loadingText}>Loading weather data...</Text>
-        )}
-      </View>
-
-      {/* Hourly Line Graph Section */}
-      <View style={styles.graphCard}>
-        <View style={styles.graphChoices}>
-          <TouchableOpacity onPress={() => setSelectedGraph('temperature')}>
-            <Text style={selectedGraph === 'temperature' ? styles.activeGraphChoice : styles.graphChoice}>
-              Temperature
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => setSelectedGraph('precipitation')}>
-            <Text style={selectedGraph === 'precipitation' ? styles.activeGraphChoice : styles.graphChoice}>
-              Precipitation
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => setSelectedGraph('humidity')}>
-            <Text style={selectedGraph === 'humidity' ? styles.activeGraphChoice : styles.graphChoice}>
-              Humidity
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => setSelectedGraph('windSpeed')}>
-            <Text style={selectedGraph === 'windSpeed' ? styles.activeGraphChoice : styles.graphChoice}>
-              Wind Speed
-            </Text>
-          </TouchableOpacity>
+      <View style={styles.topContainer}>
+        <View style={styles.dropdownContainer}>
+          <Picker
+            selectedValue={selectedCity.name}
+            onValueChange={(itemValue) => {
+              const city = cities.find((c) => c.name === itemValue);
+              if (city) setSelectedCity(city);
+            }}
+            style={[styles.picker, { color: color }]}
+            itemStyle={styles.pickerItem}
+          >
+            {cities.map((city) => (
+              <Picker.Item key={city.name} label={city.name} value={city.name} />
+            ))}
+          </Picker>
         </View>
-        <View style={{ minHeight: 240 }}>
-          {hourlyLoading ? (
-            <ActivityIndicator size="large" color="#205781" style={{ marginTop: 30 }} />
-          ) : (
-            <LineGraph
-              title=""
-              labels={hourLabels}
-              data={hourlyData}
-              color="#205781"
-              style={{ marginTop: 10 }}
+
+        <View>
+          {loading ? (
+            <Image
+              source={require("../assets/images/loading.gif")}
+              style={styles.loadinggif}
             />
+          ) : errorMessage ? (
+            <Text style={styles.errorText}>{errorMessage}</Text>
+          ) : weatherData ? (
+            <>
+              {/* Weather Icon */}
+              <View style={{ alignItems: "center", marginBottom: 10 }}>
+                {renderWeatherIcon()}
+              </View>
+
+              {/* Temperature */}
+              <Text
+                style={{
+                  color: color,
+                  fontSize: 35,
+                  fontWeight: "bold",
+                  textAlign: "center",
+                }}
+              >
+                {weatherData.temperature !== undefined &&
+                weatherData.temperature !== null
+                  ? `${weatherData.temperature}°C`
+                  : "--"}
+              </Text>
+              <Text
+                style={{
+                  color: color,
+                  fontSize: 18,
+                  textAlign: "center",
+                }}
+              >
+                {weatherData.weatherType || "--"}
+              </Text>
+
+              <View style={styles.subtypeContainer}>
+                <View style={styles.subtypeInfo}>
+                  <Feather color={color} size={24} name={"cloud-rain"} />
+                  <Text
+                    style={{
+                      color: color,
+                      fontWeight: "bold",
+                      fontSize: 18,
+                      marginTop: 5,
+                    }}
+                  >
+                    {weatherData.precipitation !== undefined &&
+                    weatherData.precipitation !== null
+                      ? `${weatherData.precipitation}`
+                      : "--"}
+                  </Text>
+                  <Text style={{ color: color, marginTop: 3 }}>
+                    Precipitation
+                  </Text>
+                </View>
+
+                <View style={styles.subtypeInfo}>
+                  <Ionicons color={color} size={24} name={"water-outline"} />
+                  <Text
+                    style={{
+                      color: color,
+                      fontWeight: "bold",
+                      fontSize: 18,
+                      marginTop: 5,
+                    }}
+                  >
+                    {weatherData.humidity !== undefined &&
+                    weatherData.humidity !== null
+                      ? `${weatherData.humidity}`
+                      : "--"}
+                  </Text>
+                  <Text style={{ color: color, marginTop: 3 }}>Humidity</Text>
+                </View>
+
+                <View style={styles.subtypeInfo}>
+                  <Feather color={color} size={24} name={"wind"} />
+                  <Text
+                    style={{
+                      color: color,
+                      fontWeight: "bold",
+                      fontSize: 18,
+                      marginTop: 5,
+                    }}
+                  >
+                    {weatherData.windSpeed !== undefined &&
+                    weatherData.windSpeed !== null
+                      ? `${weatherData.windSpeed}`
+                      : "--"}
+                  </Text>
+                  <Text style={{ color: color, marginTop: 3 }}>Wind Speed</Text>
+                </View>
+              </View>
+
+              <View style={{backgroundColor: "rgba(255, 255, 255, 0.3)", borderRadius: 18, padding: 15,borderColor:color, borderWidth: 1, marginTop: 20, backdropFilter: "blur(10px)"}}>
+              <Text
+                style={{
+                  color: color,
+                  fontSize: 18,
+                  fontWeight: "bold",
+                  textAlign: "center",
+                }}
+              >Forecast for the Week</Text>
+              <View style={styles.arrowContainer}>
+                <TouchableOpacity onPress={scrollLeft} style={styles.arrowButton}>
+                  <AntDesign name="left" size={24} color="#000" />
+                </TouchableOpacity>
+
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  ref={scrollViewRef} // Attach the ref to the ScrollView
+                  style={styles.scrollView}
+                >
+                  {weeklyData.map((day: any, index: number) => (
+                    <View key={index} style={styles.dayContainer}>
+                      <Text style={styles.dayText}>{day.day}</Text>
+                      <Text style={styles.dataText}>
+                        T: {day.temperature}°C
+                      </Text>
+                      <Text style={styles.dataText}>
+                        P: {day.precipitation}%
+                      </Text>
+                      <Text style={styles.dataText}>
+                        H: {day.humidity}%
+                      </Text>
+                      <Text style={styles.dataText}>
+                        W: {day.windSpeed} km/h
+                      </Text>
+                    </View>
+                  ))}
+                </ScrollView>
+
+                <TouchableOpacity onPress={scrollRight} style={styles.arrowButton}>
+                  <AntDesign name="right" size={24} color="#000" />
+                </TouchableOpacity>
+              </View>
+              </View>
+            </>
+          ) : (
+            <Text style={styles.loadingText}>Loading weather data...</Text>
           )}
         </View>
       </View>
-    </ThemedView>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  backgroundImage: {
     flex: 1,
-    backgroundColor: "#f6f8fa",
-    padding: 0,
+    paddingTop: 30,
+  },
+  topContainer: {
+    marginLeft: "auto",
+    marginRight: "auto",
+    backgroundColor: "transparent",
     alignItems: "center",
-    justifyContent: "flex-start",
+    justifyContent: "center",
+    width: "100%",
   },
   dropdownContainer: {
-    width: "90%",
-    marginTop: 40,
     marginBottom: 20,
-    backgroundColor: "#fff",
+    backgroundColor: "transparent",
     borderRadius: 18,
     elevation: 2,
     shadowColor: "#205781",
+    borderColor: "#cccccc",
+    borderWidth: 1,
     shadowOpacity: 0.08,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 },
     alignSelf: "center",
   },
   picker: {
-    width: "100%",
-    height: 50,
+    width: 100,
+    height: 30,
+    borderColor: "#cccccc",
+    borderWidth: 1,
+    borderRadius: 18,
+    textAlign: "center",
   },
   pickerItem: {
     fontSize: 18,
   },
   weatherCard: {
     width: "90%",
-    backgroundColor: "#fff",
+    backgroundColor: "rgba(255, 255, 255, 0.3)",
     borderRadius: 18,
-    padding: 28,
-    alignItems: "center",
+    padding: 20,
+    marginTop: 20,
     elevation: 2,
     shadowColor: "#205781",
     shadowOpacity: 0.08,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 },
-    marginBottom: 20,
   },
-  temperatureText: {
-    fontSize: 56,
-    fontWeight: "bold",
-    color: "#205781",
-    marginBottom: 8,
-  },
-  weatherDescText: {
-    fontSize: 22,
-    color: "#205781",
-    marginBottom: 18,
-    fontWeight: "600",
-    textTransform: "capitalize",
-  },
-  infoRow: {
+  arrowContainer: {
     flexDirection: "row",
-    width: "100%",
+    alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 8,
+    marginTop: 10,
   },
-  infoLabel: {
-    fontSize: 16,
-    color: "#888",
-    fontWeight: "500",
+  arrowButton: {
+    padding: 10,
+    elevation: 2,
   },
-  infoValue: {
-    fontSize: 16,
-    color: "#205781",
+  scrollView: {
+    flex: 1,
+    marginHorizontal: 10,
+    borderRadius: 12,
+  },
+  dayContainer: {
+    width: 80,
+    height: 120,
+    alignItems: "center",
+    marginRight: 10,
+    padding: 5,
+    backgroundColor: "#f9f9f9",
+    borderRadius: 25,
+    elevation: 1,
+  },
+  dayText: {
+    fontSize: 12,
     fontWeight: "bold",
+    marginBottom: 5,
+  },
+  dataText: {
+    fontSize: 12,
+    color: "#555",
   },
   loadingText: {
     fontSize: 16,
@@ -291,49 +446,23 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginTop: 20,
   },
-  graphCard: {
-    width: "95%",
-    backgroundColor: "#fff",
-    borderRadius: 18,
-    padding: 18,
-    marginTop: 10,
-    marginBottom: 20,
-    elevation: 2,
-    shadowColor: "#205781",
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
-    alignItems: "center",
+  loadinggif: {
+    width: 100,
+    height: 100,
   },
-  graphChoices: {
-    flexDirection: "row",
-    justifyContent: "space-around",
+  subtypeContainer: {
     width: "100%",
-    marginBottom: 10,
-    gap: 8,
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 50,
+    marginBottom: 20,
   },
-  graphChoice: {
+  subtypeInfo: {
+    width: "30%",
     fontSize: 16,
-    color: "#555",
-    paddingHorizontal: 16,
-    paddingVertical: 7,
-    borderRadius: 20,
-    backgroundColor: "#f1f3f6",
-    overflow: "hidden",
-    fontWeight: "500",
-  },
-  activeGraphChoice: {
-    fontSize: 16,
-    fontWeight: "bold",
     color: "#fff",
-    backgroundColor: "#205781",
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 7,
-    overflow: "hidden",
-    shadowColor: "#205781",
-    shadowOpacity: 0.12,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
+    alignItems: "center",
   },
 });

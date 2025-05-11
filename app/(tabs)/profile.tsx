@@ -198,7 +198,6 @@ const Profile = () => {
         </ThemedView>
       </ScrollView>
 
-      {/* Change Password Modal */}
       <Modal
         visible={modalVisible}
         animationType="slide"
@@ -209,90 +208,87 @@ const Profile = () => {
           style={styles.modalOverlay}
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
-          <View style={styles.modalCardWrapper}>
-            {/* Mascot peeking out */}
-            <Image
-              source={require('../../assets/images/tara.png')}
-              style={styles.mascot}
-              resizeMode="contain"
+          <ThemedView style={styles.modalCardWrapper}>
+            <ThemedText type="title" style={{ marginBottom: 10, color: '#205781', fontWeight: 'bold' }}>
+              Change Password
+            </ThemedText>
+            <ThemedText>Make your account secure by changing your password regularly.</ThemedText>
+
+            <TextInput
+              placeholder="Current Password"
+              secureTextEntry
+              style={[
+                styles.loginInput,
+                focusedInput === 'current' && styles.inputFocused
+              ]}
+              value={currentPassword}
+              onChangeText={setCurrentPassword}
+              placeholderTextColor="#aaa"
+              onFocus={() => setFocusedInput('current')}
+              onBlur={() => setFocusedInput(null)}
             />
-            <ThemedView style={styles.modalContentModern}>
-              <ThemedText type="title" style={{ marginBottom: 16, textAlign: 'center', color: '#205781', fontWeight: 'bold' }}>
-                Change Password
+
+            <TextInput
+              placeholder="New Password"
+              secureTextEntry
+              style={[
+                styles.loginInput,
+                focusedInput === 'new' && styles.inputFocused
+              ]}
+              value={newPassword}
+              onChangeText={setNewPassword}
+              placeholderTextColor="#aaa"
+              onFocus={() => setFocusedInput('new')}
+              onBlur={() => setFocusedInput(null)}
+            />
+
+            <TextInput
+              placeholder="Confirm Password"
+              secureTextEntry
+              style={[
+                styles.loginInput,
+                focusedInput === 'confirm' && styles.inputFocused
+              ]}
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              placeholderTextColor="#aaa"
+              onFocus={() => setFocusedInput('confirm')}
+              onBlur={() => setFocusedInput(null)}
+            />
+
+            {formError ? (
+              <ThemedText style={{ color: '#d32f2f', backgroundColor: '#fdecea', borderRadius: 8, paddingVertical: 8, paddingHorizontal: 12, marginBottom: 14, textAlign: 'center', fontSize: 15 }}>
+                {formError}
               </ThemedText>
-              <TextInput
-                placeholder="Current Password"
-                secureTextEntry
-                style={[
-                  styles.loginInput,
-                  focusedInput === 'current' && styles.inputFocused
-                ]}
-                value={currentPassword}
-                onChangeText={setCurrentPassword}
-                placeholderTextColor="#aaa"
-                onFocus={() => setFocusedInput('current')}
-                onBlur={() => setFocusedInput(null)}
-              />
-              <TextInput
-                placeholder="New Password"
-                secureTextEntry
-                style={[
-                  styles.loginInput,
-                  focusedInput === 'new' && styles.inputFocused
-                ]}
-                value={newPassword}
-                onChangeText={setNewPassword}
-                placeholderTextColor="#aaa"
-                onFocus={() => setFocusedInput('new')}
-                onBlur={() => setFocusedInput(null)}
-              />
-              <TextInput
-                placeholder="Confirm Password"
-                secureTextEntry
-                style={[
-                  styles.loginInput,
-                  focusedInput === 'confirm' && styles.inputFocused
-                ]}
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                placeholderTextColor="#aaa"
-                onFocus={() => setFocusedInput('confirm')}
-                onBlur={() => setFocusedInput(null)}
-              />
-              {formError ? (
-                <ThemedText style={{ color: '#d32f2f', backgroundColor: '#fdecea', borderRadius: 8, paddingVertical: 8, paddingHorizontal: 12, marginBottom: 14, textAlign: 'center', fontSize: 15 }}>
-                  {formError}
-                </ThemedText>
-              ) : null}
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                {/* Cancel Button (Outline) */}
-                <TouchableOpacity
-                  style={[styles.gradientButton, styles.outlineButton]}
-                  onPress={() => {
-                    setModalVisible(false);
-                    setFormError('');
-                    setCurrentPassword('');
-                    setNewPassword('');
-                    setConfirmPassword('');
-                  }}
-                  activeOpacity={0.85}
+            ) : null}
+
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+              {/* Cancel Button (Outline) */}
+              <TouchableOpacity
+                style={[styles.gradientButton, styles.outlineButton]}
+                onPress={() => {
+                  setModalVisible(false);
+                  setFormError('');
+                  setCurrentPassword('');
+                  setNewPassword('');
+                  setConfirmPassword('');
+                }}
+                activeOpacity={0.85}
+              >
+                <ThemedText style={styles.outlineButtonText}>Cancel</ThemedText>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.gradientButton} onPress={handleChangePassword} activeOpacity={0.85}>
+                <LinearGradient
+                  colors={['#205781', '#7AB2D3']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.gradientButtonBg}
                 >
-                  <ThemedText style={styles.outlineButtonText}>Cancel</ThemedText>
-                </TouchableOpacity>
-                {/* Submit Button (Gradient) */}
-                <TouchableOpacity style={styles.gradientButton} onPress={handleChangePassword} activeOpacity={0.85}>
-                  <LinearGradient
-                    colors={['#205781', '#7AB2D3']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={styles.gradientButtonBg}
-                  >
-                    <ThemedText style={{ color: '#fff', fontWeight: 'bold' }}>Submit</ThemedText>
-                  </LinearGradient>
-                </TouchableOpacity>
-              </View>
-            </ThemedView>
-          </View>
+                  <ThemedText style={{ color: '#fff', fontWeight: 'bold' }}>Submit</ThemedText>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+          </ThemedView>
         </KeyboardAvoidingView>
       </Modal>
 
@@ -316,11 +312,10 @@ const Profile = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f6f8fa',
     paddingBottom: 0,
   },
   scrollContent: {
-    paddingBottom: 100, // Space for logout button
+    paddingBottom: 100,
     flexGrow: 1,
   },
   header: {
@@ -424,41 +419,17 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: 'white',
     justifyContent: 'center',
     alignItems: 'center',
+    padding:20,
   },
   modalCardWrapper: {
     width: '100%',
-    maxWidth: 380,
-    alignItems: 'center',
     justifyContent: 'center',
     alignSelf: 'center',
     position: 'relative',
-    paddingLeft: 20,
-    paddingRight: 20,
-  },
-  mascot: {
-    width: 80,
-    height: 80,
-    position: 'absolute',
-    top: -40,
-    zIndex: 2,
-    alignSelf: 'center',
-    backgroundColor: 'transparent',
-  },
-  modalContentModern: {
-    width: '100%',
-    backgroundColor: '#fff',
-    borderRadius: 25,
-    padding: 24,
-    paddingTop: 60, // space for mascot
-    elevation: 8,
-    alignItems: 'stretch',
-    shadowColor: '#205781',
-    shadowOpacity: 0.15,
-    shadowRadius: 20,
-    shadowOffset: { width: 0, height: 8 },
+    height: '100%',
   },
   loginInput: {
     borderWidth: 0,

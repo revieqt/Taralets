@@ -108,7 +108,7 @@ export default function ParallaxScrollView({ children }: Props) {
             )}
             {isExpanded && (
               <TouchableOpacity style={styles.collapseButton} onPress={handleCollapse}>
-                <Text style={styles.buttonText}>X</Text>
+                <Text style={styles.buttonText}>Collapse</Text>
               </TouchableOpacity>
             )}
           </ThemedView>
