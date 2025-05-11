@@ -12,7 +12,7 @@ export default function HomeScreen() {
     <ParallaxScrollView>
 
       <View style={styles.menuContainer}>
-      <TouchableOpacity onPress={() => router.push('user/routes')} style={styles.menuButton}>
+      <TouchableOpacity onPress={() => router.push('/routes')} style={styles.menuButton}>
         <MaterialIcons name="route" size={24} color="black" />
         <ThemedText>Routes</ThemedText>
       </TouchableOpacity>
@@ -21,7 +21,7 @@ export default function HomeScreen() {
         <VerticalRule height="50%" color="#aaa" thickness={1}/>
       </View>
       
-      <TouchableOpacity onPress={() => router.push('user/itineraries')} style={styles.menuButton}>
+      <TouchableOpacity onPress={() => router.push('/itineraries')} style={styles.menuButton}>
         <Octicons name="paper-airplane" size={24} color="black" />
         <ThemedText>Itineraries</ThemedText>
       </TouchableOpacity>
@@ -30,7 +30,7 @@ export default function HomeScreen() {
         <VerticalRule height="50%" color="#aaa" thickness={1}/>
       </View>
 
-      <TouchableOpacity onPress={() => router.push('user/weather')} style={styles.menuButton}>
+      <TouchableOpacity onPress={() => router.push('/weather')} style={styles.menuButton}>
         <MaterialCommunityIcons name="weather-sunset" size={24} color="black" />
         <ThemedText>Weather</ThemedText>
       </TouchableOpacity>

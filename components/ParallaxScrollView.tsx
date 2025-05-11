@@ -1,23 +1,33 @@
-import { Dimensions, StyleSheet, TouchableOpacity, Text, View , Image} from 'react-native';
-import Animated, { useAnimatedRef, useAnimatedStyle, useScrollViewOffset, useSharedValue, interpolate, withTiming } from 'react-native-reanimated';
-
+import { Dimensions, StyleSheet, TouchableOpacity, Text, View, Image } from 'react-native';
+import Animated, {
+  useAnimatedRef,
+  useAnimatedStyle,
+  useScrollViewOffset,
+  useSharedValue,
+  interpolate,
+  withTiming,
+} from 'react-native-reanimated';
 
 import { ThemedView } from '@/components/ThemedView';
 import { useBottomTabOverflow } from '@/components/ui/TabBarBackground';
 import { useState, useEffect } from 'react';
 import { ThemedText } from './ThemedText';
-import userLocation from '@/utils/userLocationAddress';  // Assuming your location utility is imported
-import { getUserLocation } from '@/utils/location';
+import userLocation from '@/utils/userLocationAddress'; // Assuming your location utility is imported
+import { getUserLocation } from '@/services/mapService'; // Use your mapService here
+
+import MapView, { PROVIDER_DEFAULT, Marker, UrlTile } from 'react-native-maps';
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 const HEADER_HEIGHT = 250;
 const FLOATING_VIEW_HEIGHT = 85;
-const EXPANDED_HEIGHT = SCREEN_HEIGHT * 0.90;
+const EXPANDED_HEIGHT = SCREEN_HEIGHT * 0.9;
 
-type Props = PropsWithChildren<{}>;
+type Props = React.PropsWithChildren<{}>;
 
 export default function ParallaxScrollView({ children }: Props) {
   const [location, setLocation] = useState<{ street: string; city: string } | null>(null);
+  const [userCoords, setUserCoords] = useState<{ latitude: number; longitude: number } | null>(null);
+
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
   const scrollOffset = useScrollViewOffset(scrollRef);
   const bottom = useBottomTabOverflow();
@@ -30,8 +40,12 @@ export default function ParallaxScrollView({ children }: Props) {
     const fetchLocation = async () => {
       const currentLocation = await getUserLocation();
       if (currentLocation) {
-        const street = await userLocation.street(currentLocation.lat, currentLocation.long);
-        const city = await userLocation.city(currentLocation.lat, currentLocation.long);
+        setUserCoords({
+          latitude: currentLocation.latitude,
+          longitude: currentLocation.longitude,
+        });
+        const street = await userLocation.street(currentLocation.latitude, currentLocation.longitude);
+        const city = await userLocation.city(currentLocation.latitude, currentLocation.longitude);
         setLocation({ street, city });
       }
     };
@@ -82,11 +96,11 @@ export default function ParallaxScrollView({ children }: Props) {
         ref={scrollRef}
         scrollEventThrottle={16}
         scrollIndicatorInsets={{ bottom }}
-        contentContainerStyle={{ paddingBottom: bottom }}>
-        
-        {/* Expanding Header Container */}
+        contentContainerStyle={{ paddingBottom: bottom }}
+      >
         <Animated.View style={[styles.headerContainer, containerStyle]}>
           <ThemedView style={styles.header}>
+
             {!isExpanded && (
               <TouchableOpacity style={styles.expandButton} onPress={handleExpand}>
                 <Text style={styles.buttonText}>Expand</Text>
@@ -101,31 +115,21 @@ export default function ParallaxScrollView({ children }: Props) {
         </Animated.View>
 
         <Animated.View style={floatingStyle}>
-            <ThemedView style={styles.locationContainer}>
-              <Image source={require('../assets/images/tara_readingmap.png')} style={styles.image} />
-              
+          <ThemedView style={styles.locationContainer}>
+            <Image source={require('../assets/images/tara_readingmap.png')} style={styles.image} />
+            {location ? (
+              <View style={styles.locationTextContainer}>
+                <ThemedText>You are currently at:</ThemedText>
+                <ThemedText type="subtitle">{`${location.street}, ${location.city}`}</ThemedText>
+              </View>
+            ) : (
+              <View style={styles.locationTextContainer}>
+                <ThemedText>Loading location...</ThemedText>
+              </View>
+            )}
+          </ThemedView>
+        </Animated.View>
 
-              {location ? (
-                    <View style={styles.locationTextContainer}>
-                      <ThemedText>
-                        You are currently at:
-                      </ThemedText>
-                      <ThemedText type='subtitle'>
-                        {`${location.street}, ${location.city}`}
-                      </ThemedText>
-                    </View>
-              ) : (
-                <View style={styles.locationTextContainer}>
-                  <ThemedText>Loading location...</ThemedText>
-                </View>
-              )}
-              
-            </ThemedView>
-            
-          </Animated.View>
-        
-
-        {/* Scrollable Content */}
         <ThemedView style={styles.content}>{children}</ThemedView>
       </Animated.ScrollView>
     </ThemedView>
@@ -147,6 +151,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'red',
     justifyContent: 'center',
     alignItems: 'center',
+    overflow: 'hidden',
+  },
+  map: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 16,
   },
   expandButton: {
     position: 'absolute',
@@ -182,16 +191,24 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderWidth: 1,
   },
-  image:{
+  image: {
     position: 'absolute',
     width: 100,
     resizeMode: 'contain',
-    marginTop: -203,
-    marginLeft: -2,
+    marginTop: -225,
+    marginLeft: 3,
     borderRadius: 10,
   },
   locationTextContainer: {
     marginTop: 12,
     marginLeft: 90,
+    overflow: 'hidden',
+  },
+  mapContainer: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+    borderRadius: 16,
+    overflow: 'hidden',
   },
 });

@@ -29,28 +29,28 @@ export default function TabLayout() {
         name="home"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="home" color={color} />,
+          tabBarIcon: ({ color }) => <IconSymbol size={20} name="home" color={color} />,
         }}
       />
       <Tabs.Screen
         name="groups"
         options={{
           title: 'Groups',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="group" color={color} />,
+          tabBarIcon: ({ color }) => <IconSymbol size={20} name="team" color={color} />,
         }}
       />
       <Tabs.Screen
         name="emergency"
         options={{
           title: 'Emergency',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="exclamation-circle" color={color} />,
+          tabBarIcon: ({ color }) => <IconSymbol size={20} name="exclamationcircleo" color={color} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="user-circle-o" color={color} />,
+          tabBarIcon: ({ color }) => <IconSymbol size={20} name="user" color={color} />,
         }}
       />
     </Tabs>

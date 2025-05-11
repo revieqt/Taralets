@@ -20,22 +20,9 @@ export default function Index() {
             const status = userData.status;
 
             if (status === 'Active') {
-              if (userType === 'admin') {
-                router.replace('/admin/home');
-              } else if (userType === 'user' || userType === 'guide') {
-                router.replace('/user/home');
-              } else {
-                Alert.alert('Login Failed', 'Unknown user type.');
-                router.replace('/login');
-              }
+              router.replace('/home');
             } else if (status === 'Warned') {
-              // Placeholder: You can add special behavior here later
-              if (userType === 'admin') {
-                router.replace('/admin/home');
-              } else {
-                router.replace('/user/home');
-              }
-              // Later, you might show a warning modal or message here
+              router.replace('/home');
             } else {
               Alert.alert('Account Inactive', 'Your account is not active. Please contact support.');
               router.replace('/login');

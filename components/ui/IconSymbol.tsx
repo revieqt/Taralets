@@ -1,8 +1,8 @@
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import AntDesign from '@expo/vector-icons/AntDesign';
 import React from 'react';
 import { OpaqueColorValue, StyleProp, ViewStyle } from 'react-native';
 
-export type IconSymbolName = React.ComponentProps<typeof FontAwesome>['name'];
+export type IconSymbolName = React.ComponentProps<typeof AntDesign>['name'];
 
 /**
  * An icon component that uses FontAwesome directly.
@@ -18,5 +18,5 @@ export function IconSymbol({
   color: string | OpaqueColorValue;
   style?: StyleProp<ViewStyle>;
 }) {
-  return <FontAwesome color={color} size={size} name={name} style={style} />;
+  return <AntDesign color={color} size={size} name={name} style={style} />;
 }

@@ -14,7 +14,7 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [loaded] = useFonts({
-    Roboto: require('../assets/fonts/Roboto-VariableFont_wdth,wght.ttf'),
+    Roboto: require('../assets/fonts/OpenSans-VariableFont_wdth,wght.ttf'),
   });
 
   useEffect(() => {
@@ -30,15 +30,15 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
-        <Stack.Screen name="user/(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="user/routes" options={{ headerShown: true }} />
-        <Stack.Screen name="user/itineraries" options={{ headerShown: true }} />
-        <Stack.Screen name="user/weather" options={{ headerShown: true }} />
-        
-        <Stack.Screen name="admin/(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="routes" options={{ headerShown: true }} />
+        <Stack.Screen name="itineraries" options={{ headerShown: true }} />
+        <Stack.Screen name="weather" options={{ headerShown: true }} />
+        <Stack.Screen name="tourGuideApplication" options={{ headerShown: false }} />
         <Stack.Screen name="login" options={{ headerShown: false }} />
         <Stack.Screen name="register" options={{ headerShown: false }} />
         <Stack.Screen name="index" options={{ headerShown: false }} />
+
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="auto" />
