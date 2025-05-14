@@ -182,7 +182,7 @@ export default function WeatherScreen() {
         }}
       >
         <AntDesign color={color} size={24} name={"left"} />
-        <Text style={{ color, fontSize: 15 }}>Back</Text>
+        <Text style={{ color, fontSize: 15 }}>Go back</Text>
       </TouchableOpacity>
 
       <View style={styles.topContainer}>
@@ -310,7 +310,7 @@ export default function WeatherScreen() {
               >Forecast for the Week</Text>
               <View style={styles.arrowContainer}>
                 <TouchableOpacity onPress={scrollLeft} style={styles.arrowButton}>
-                  <AntDesign name="left" size={24} color="#000" />
+                  <AntDesign name="left" size={24} color={color} />
                 </TouchableOpacity>
 
                 <ScrollView
@@ -339,7 +339,7 @@ export default function WeatherScreen() {
                 </ScrollView>
 
                 <TouchableOpacity onPress={scrollRight} style={styles.arrowButton}>
-                  <AntDesign name="right" size={24} color="#000" />
+                  <AntDesign name="right" size={24} color={color} />
                 </TouchableOpacity>
               </View>
               </View>
@@ -391,10 +391,8 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   weatherCard: {
-    width: "90%",
-    backgroundColor: "rgba(255, 255, 255, 0.3)",
+    width: "100%",
     borderRadius: 18,
-    padding: 20,
     marginTop: 20,
     elevation: 2,
     shadowColor: "#205781",
@@ -405,7 +403,6 @@ const styles = StyleSheet.create({
   arrowContainer: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
     marginTop: 10,
   },
   arrowButton: {
@@ -414,8 +411,8 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-    marginHorizontal: 10,
     borderRadius: 12,
+    width: "70%",
   },
   dayContainer: {
     width: 80,

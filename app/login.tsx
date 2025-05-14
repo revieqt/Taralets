@@ -1,17 +1,22 @@
 import React, { useState } from 'react';
-import { View, TextInput, TouchableOpacity, Alert, StyleSheet, KeyboardAvoidingView, Platform, Image } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, Image } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../auth/firebaseConfig';
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import TextField from '@/components/TextField';
+import PasswordField from '@/components/PasswordField';
+import OutlineButton from '@/components/OutlineButton';
+import GradientButton from '@/components/GradientButton';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [focusedInput, setFocusedInput] = useState<string | null>(null);
 
   const handleLogin = async () => {
     setErrorMsg('');
@@ -25,7 +30,6 @@ export default function LoginScreen() {
       await signInWithEmailAndPassword(auth, email, password);
       router.replace('/');
     } catch (error: any) {
-      // Firebase error codes: https://firebase.google.com/docs/reference/js/auth#autherrorcodes
       if (error.code === 'auth/user-not-found') {
         setErrorMsg('No account found with this email.');
       } else if (error.code === 'auth/wrong-password') {
@@ -45,67 +49,59 @@ export default function LoginScreen() {
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <View style={styles.cardWrapper}>
-          <Image
-            source={require('../assets/images/tara.png')}
-            style={styles.mascot}
-            resizeMode="contain"
-          />
-          <ThemedView style={styles.card}>
-            <ThemedText type='title' style={styles.title}>
-              Welcome to TaraG!
-            </ThemedText>
-            <ThemedText style={styles.subtitle}>
-              Login to effectively plan your next travels!
-            </ThemedText>
+        <Image
+          source={require('../assets/images/tara.png')}
+          style={styles.mascot}
+          resizeMode="contain"
+        />
+        <ThemedText type="title" style={styles.title}>
+          Welcome to TaraG!
+        </ThemedText>
+        <ThemedText style={styles.subtitle}>
+          Login to effectively plan your next travels!
+        </ThemedText>
 
-            {errorMsg ? (
-              <ThemedText style={styles.errorMsg}>{errorMsg}</ThemedText>
-            ) : null}
+        {errorMsg ? (
+          <ThemedText style={styles.errorMsg}>{errorMsg}</ThemedText>
+        ) : null}
 
-            <TextInput
-              placeholder="Email"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              style={styles.input}
-              placeholderTextColor="#aaa"
-            />
+        <TextField
+          placeholder="Email"
+          value={email}
+          onChangeText={setEmail}
+          onFocus={() => setFocusedInput('email')}
+          onBlur={() => setFocusedInput(null)}
+          isFocused={focusedInput === 'email'}
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
 
-            <TextInput
-              placeholder="Password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              style={styles.input}
-              placeholderTextColor="#aaa"
-            />
+        <PasswordField
+          placeholder="Password"
+          value={password}
+          onChangeText={setPassword}
+          onFocus={() => setFocusedInput('password')}
+          onBlur={() => setFocusedInput(null)}
+          isFocused={focusedInput === 'password'}
+        />
 
-            <TouchableOpacity
-                onPress={handleLogin}
-                style={{ borderRadius: 25, marginTop: 6, marginBottom: 10 }}
-                disabled={loading}
-              >
-                <LinearGradient
-                  colors={['#205781', '#7AB2D3']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.button}
-                >
-                  <ThemedText style={styles.buttonText}>
-                    {loading ? 'Logging in...' : 'Login'}
-                  </ThemedText>
-                </LinearGradient>
-              </TouchableOpacity>
+        <GradientButton
+          title={loading ? 'Logging in...' : 'Login'}
+          onPress={handleLogin}
+          gradientColors={['#205781', '#7AB2D3']}
+        />
 
-            <TouchableOpacity onPress={() => router.push('/register')} style={styles.registerLink}>
-              <ThemedText style={styles.registerText}>
-                Don't have an account? <ThemedText style={{ textDecorationLine: 'underline' }}>Register</ThemedText>
-              </ThemedText>
-            </TouchableOpacity>
-          </ThemedView>
-        </View>
+        <ThemedText style={{padding:20}}>----- or -----</ThemedText>
+        <OutlineButton
+          title="Sign in with Google"
+          onPress={() => {}}
+        />
+
+        <TouchableOpacity onPress={() => router.push('/register')} style={styles.registerLink}>
+          <ThemedText style={styles.registerText}>
+            Don't have an account? <ThemedText style={{ textDecorationLine: 'underline' }}>Register</ThemedText>
+          </ThemedText>
+        </TouchableOpacity>
       </KeyboardAvoidingView>
     </ThemedView>
   );
@@ -116,45 +112,22 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f6f8fa',
     justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
   },
   container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    margin: 20,
-  },
-  cardWrapper: {
     width: '100%',
     maxWidth: 380,
     alignItems: 'center',
-    justifyContent: 'center',
-    alignSelf: 'center',
-    position: 'relative',
   },
   mascot: {
     width: 100,
     height: 100,
-    position: 'absolute',
-    top: -50,
-    zIndex: 2,
-    alignSelf: 'center',
-    backgroundColor: 'transparent',
-  },
-  card: {
-    width: '100%',
-    backgroundColor: '#fff',
-    borderRadius: 18,
-    padding: 28,
-    paddingTop: 60,
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 6,
-    alignSelf: 'center',
-    alignItems: 'stretch',
+    marginBottom: 20,
   },
   title: {
+    fontSize: 24,
+    fontWeight: 'bold',
     marginBottom: 6,
     textAlign: 'center',
   },
@@ -174,20 +147,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 15,
   },
-  input: {
-    borderWidth: 0,
-    backgroundColor: '#f1f3f6',
-    padding: 14,
-    borderRadius: 25,
-    marginBottom: 16,
-    fontSize: 16,
-    color: '#222',
-  },
   button: {
     paddingVertical: 15,
     borderRadius: 25,
-    marginTop: 6,
-    marginBottom: 10,
     alignItems: 'center',
     shadowColor: '#007bff',
     shadowOpacity: 0.15,
@@ -202,7 +164,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   registerLink: {
-    marginTop: 6,
+    marginTop: 10,
     alignItems: 'center',
   },
   registerText: {

@@ -1,17 +1,162 @@
-import React, { useState } from 'react';
-import { View, TextInput, TouchableOpacity, Alert, StyleSheet, KeyboardAvoidingView, Platform, Image } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { ScrollView, StyleSheet, KeyboardAvoidingView, Platform, Alert, TouchableOpacity } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { router } from 'expo-router';
+import TextField from '@/components/TextField';
+import GradientButton from '@/components/GradientButton';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
+import { db } from '../auth/firebaseConfig';
+import { collection, addDoc, Timestamp } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
+import { useRouter } from 'expo-router';
 
-export default function Application() {
- 
+export default function TourGuideApplication() {
+  const [address, setAddress] = useState('');
+  const [certification, setCertification] = useState('');
+  const [experience, setExperience] = useState('');
+  const [languages, setLanguages] = useState('');
+  const [region, setRegion] = useState('');
+  const [license, setLicense] = useState('');
+  const [socials, setSocials] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
+  const [loading, setLoading] = useState(false);
+  const scrollRef = useRef<ScrollView>(null);
+  const auth = getAuth();
+  const router = useRouter();
+
+  const handleSubmit = async () => {
+    setErrorMsg('');
+    if (!address || !certification || !experience || !languages || !region || !license || !socials) {
+      setErrorMsg('All fields are required.');
+      scrollRef.current?.scrollTo({ y: 0, animated: true });
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        setErrorMsg('User not authenticated.');
+        setLoading(false);
+        return;
+      }
+
+      await addDoc(collection(db, 'applications'), {
+        userID: user.uid, // Include the user ID
+        address,
+        certification,
+        experience,
+        languages,
+        region,
+        license,
+        socials,
+        status: 'Pending',
+        submittedOn: Timestamp.now(),
+      });
+
+      Alert.alert('Application Sent', 'Your application is waiting for administrator approval.');
+      setAddress('');
+      setCertification('');
+      setExperience('');
+      setLanguages('');
+      setRegion('');
+      setLicense('');
+      setSocials('');
+      router.push('/(tabs)/profile'); // Navigate back to the profile page
+    } catch (error) {
+      setErrorMsg('Failed to submit application. Please try again.');
+    }
+
+    setLoading(false);
+  };
 
   return (
     <ThemedView style={styles.background}>
-      <ThemedText>Application form irid hahahaha</ThemedText>
+      <LinearGradient
+        colors={['#205781', '#7AB2D3']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.header}
+      >
+        <TouchableOpacity
+          style={styles.closeButton}
+          onPress={() => router.push('/(tabs)/profile')}
+        >
+          <Ionicons name="close" size={24} color="#fff" />
+        </TouchableOpacity>
+        <ThemedText type="title" style={styles.headerTitle}>
+          Tour Guide Application
+        </ThemedText>
+        <ThemedText style={styles.headerSubtitle}>
+          Fill out the form to apply as a tour guide.
+        </ThemedText>
+      </LinearGradient>
+
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView
+          ref={scrollRef}
+          style={{ width: '100%' }}
+          contentContainerStyle={{ alignItems: 'center', paddingBottom: 30 }}
+          keyboardShouldPersistTaps="handled"
+        >
+          {errorMsg ? (
+            <ThemedText style={styles.errorMsg}>{errorMsg}</ThemedText>
+          ) : null}
+
+          <TextField
+            placeholder="Address"
+            value={address}
+            onChangeText={setAddress}
+          />
+
+          <TextField
+            placeholder="Tour Guide Certification"
+            value={certification}
+            onChangeText={setCertification}
+          />
+
+          <TextField
+            placeholder="Years of Experience"
+            value={experience}
+            onChangeText={setExperience}
+            keyboardType="numeric"
+          />
+
+          <TextField
+            placeholder="Languages Spoken"
+            value={languages}
+            onChangeText={setLanguages}
+          />
+
+          <TextField
+            placeholder="Tour Region"
+            value={region}
+            onChangeText={setRegion}
+          />
+
+          <TextField
+            placeholder="License Number"
+            value={license}
+            onChangeText={setLicense}
+          />
+
+          <TextField
+            placeholder="Social Media Links"
+            value={socials}
+            onChangeText={setSocials}
+          />
+
+          <GradientButton
+            title={loading ? 'Submitting...' : 'Submit Application'}
+            onPress={handleSubmit}
+          />
+        </ScrollView>
+      </KeyboardAvoidingView>
     </ThemedView>
   );
 }
@@ -20,54 +165,36 @@ const styles = StyleSheet.create({
   background: {
     flex: 1,
     backgroundColor: '#f6f8fa',
-    justifyContent: 'center',
+  },
+  header: {
+    width: '100%',
+    height: 160,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    paddingHorizontal: 20,
+    paddingTop: 65,
+    position: 'relative',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    zIndex: 10,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  headerSubtitle: {
+    fontSize: 15,
+    color: '#f1f3f6',
+    marginTop: 3,
   },
   container: {
     flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
-    margin: 20,
-  },
-  cardWrapper: {
-    width: '100%',
-    maxWidth: 380,
-    alignItems: 'center',
-    justifyContent: 'center',
-    alignSelf: 'center',
-    position: 'relative',
-  },
-  mascot: {
-    width: 100,
-    height: 100,
-    position: 'absolute',
-    top: -50,
-    zIndex: 2,
-    alignSelf: 'center',
-    backgroundColor: 'transparent',
-  },
-  card: {
-    width: '100%',
-    backgroundColor: '#fff',
-    borderRadius: 18,
-    padding: 28,
-    paddingTop: 60, // Add extra top padding for mascot
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 6,
-    alignSelf: 'center',
-    alignItems: 'stretch',
-  },
-  title: {
-    marginBottom: 6,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 15,
-    color: '#666',
-    marginBottom: 28,
-    textAlign: 'center',
+    padding: 20,
   },
   errorMsg: {
     color: '#d32f2f',
@@ -77,41 +204,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     marginBottom: 14,
     textAlign: 'center',
-    fontSize: 15,
-  },
-  input: {
-    borderWidth: 0,
-    backgroundColor: '#f1f3f6',
-    padding: 14,
-    borderRadius: 25,
-    marginBottom: 16,
-    fontSize: 16,
-    color: '#222',
-  },
-  button: {
-    paddingVertical: 15,
-    borderRadius: 25,
-    marginTop: 6,
-    marginBottom: 10,
-    alignItems: 'center',
-    shadowColor: '#007bff',
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
-  },
-  buttonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 17,
-    letterSpacing: 0.5,
-  },
-  registerLink: {
-    marginTop: 6,
-    alignItems: 'center',
-  },
-  registerText: {
-    color: '#007bff',
     fontSize: 15,
   },
 });

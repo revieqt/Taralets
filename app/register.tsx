@@ -1,13 +1,15 @@
-import React, { useRef,useState } from 'react';
-import { TextInput, TouchableOpacity, Alert, StyleSheet, KeyboardAvoidingView, Platform, Image, View, ScrollView, Pressable } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { ScrollView, StyleSheet, KeyboardAvoidingView, Platform, Image, TouchableOpacity, View } from 'react-native';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth, db } from '../auth/firebaseConfig';
 import { router } from 'expo-router';
 import { doc, setDoc, Timestamp, getDocs, collection, query, where } from 'firebase/firestore';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { Picker } from '@react-native-picker/picker';
+import TextField from '@/components/TextField';
+import PasswordField from '@/components/PasswordField';
+import DatePicker from '@/components/DatePicker';
+import GradientButton from '@/components/GradientButton';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const defaultProfileImage = '../../../assets/images/defaultUser.jpg';
@@ -35,11 +37,10 @@ export default function RegisterScreen() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-  const [showDatePicker, setShowDatePicker] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
+
   const handleRegister = async () => {
     setErrorMsg('');
-    // Validation
     if (
       !fname ||
       !lname ||
@@ -63,7 +64,6 @@ export default function RegisterScreen() {
 
     setLoading(true);
 
-    // Check if username already exists
     try {
       const q = query(collection(db, 'users'), where('username', '==', username));
       const querySnapshot = await getDocs(q);
@@ -98,190 +98,131 @@ export default function RegisterScreen() {
         type: 'user',
         createdOn: Timestamp.now(),
       });
-      Alert.alert('Success', 'Account created!');
       router.replace('/login');
     } catch (error: any) {
       if (error.code === 'auth/email-already-in-use') {
         setErrorMsg('Email is already in use.');
-        scrollRef.current?.scrollTo({ y: 0, animated: true });
       } else if (error.code === 'auth/invalid-email') {
         setErrorMsg('Invalid email address.');
-        scrollRef.current?.scrollTo({ y: 0, animated: true });
       } else if (error.code === 'auth/weak-password') {
         setErrorMsg('Password should be at least 6 characters.');
-        scrollRef.current?.scrollTo({ y: 0, animated: true });
       } else {
         setErrorMsg(error.message || 'Registration failed.');
-        scrollRef.current?.scrollTo({ y: 0, animated: true });
       }
+      scrollRef.current?.scrollTo({ y: 0, animated: true });
     }
     setLoading(false);
   };
 
   return (
     <ThemedView style={styles.background}>
+
+      
+      <LinearGradient
+        colors={['#205781', '#7AB2D3']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.header}
+      >
+        <ThemedText type="subtitle" style={styles.headerTitle}>
+          Create an Account
+        </ThemedText>
+        <ThemedText style={styles.headerSubtitle}>
+          Fill up the form and join our growing community!
+        </ThemedText>
+      </LinearGradient>
+
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
-        ref={scrollRef}
+          ref={scrollRef}
           style={{ width: '100%' }}
           contentContainerStyle={{ alignItems: 'center', paddingBottom: 30 }}
           keyboardShouldPersistTaps="handled"
         >
-          <View style={styles.cardWrapper}>
-            <Image
-              source={require('../assets/images/tara.png')}
-              style={styles.mascot}
-              resizeMode="contain"
-            />
-            <ThemedView style={styles.card}>
-              <ThemedText type='title' style={styles.title}>
-                Create an Account
-              </ThemedText>
-              <ThemedText style={styles.subtitle}>
-                Fill-up the form and join our growing community!
-              </ThemedText>
+          {errorMsg ? (
+            <ThemedText style={styles.errorMsg}>{errorMsg}</ThemedText>
+          ) : null}
 
-              {/* Error Message */}
-              {errorMsg ? (
-                <ThemedText style={styles.errorMsg}>{errorMsg}</ThemedText>
-              ) : null}
+          <TextField
+            placeholder="First Name"
+            value={fname}
+            onChangeText={setFname}
+            autoCapitalize="words"
+          />
 
-              <TextInput
-                placeholder="First Name"
-                value={fname}
-                onChangeText={setFname}
-                autoCapitalize="words"
-                style={styles.input}
-                placeholderTextColor="#aaa"
-              />
+          <TextField
+            placeholder="Last Name"
+            value={lname}
+            onChangeText={setLname}
+            autoCapitalize="words"
+          />
 
-              <TextInput
-                placeholder="Last Name"
-                value={lname}
-                onChangeText={setLname}
-                autoCapitalize="words"
-                style={styles.input}
-                placeholderTextColor="#aaa"
-              />
+          <TextField
+            placeholder="Middle Name (optional)"
+            value={mname}
+            onChangeText={setMname}
+            autoCapitalize="words"
+          />
 
-              <TextInput
-                placeholder="Middle Name (optional)"
-                value={mname}
-                onChangeText={setMname}
-                autoCapitalize="words"
-                style={styles.input}
-                placeholderTextColor="#aaa"
-              />
+          <DatePicker
+            placeholder="Birthdate"
+            value={bdate}
+            onChange={setBdate}
+          />
 
-              {/* Birthdate Picker */}
-              <Pressable onPress={() => setShowDatePicker(true)}>
-                <View pointerEvents="none">
-                  <TextInput
-                    placeholder="Birthdate"
-                    value={bdate ? bdate.toISOString().slice(0, 10) : ''}
-                    style={styles.input}
-                    placeholderTextColor="#aaa"
-                    editable={false}
-                  />
-                </View>
-              </Pressable>
-              {showDatePicker && (
-                <DateTimePicker
-                  value={bdate || new Date(2000, 0, 1)}
-                  mode="date"
-                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                  onChange={(_, selectedDate) => {
-                    setShowDatePicker(false);
-                    if (selectedDate) setBdate(selectedDate);
-                  }}
-                  maximumDate={new Date()}
-                />
-              )}
+          <TextField
+            placeholder="Gender"
+            value={gender}
+            onChangeText={setGender}
+          />
 
-              {/* Modern Gender Picker */}
-              <View style={styles.pickerWrapper}>
-                <Picker
-                  selectedValue={gender}
-                  onValueChange={setGender}
-                  style={styles.picker}
-                  dropdownIconColor="#007bff"
-                >
-                  <Picker.Item label="Select Gender" value="" color="#aaa" />
-                  <Picker.Item label="Male" value="Male" />
-                  <Picker.Item label="Female" value="Female" />
-                  <Picker.Item label="Others" value="Others" />
-                </Picker>
-              </View>
+          <TextField
+            placeholder="Contact Number"
+            value={contactNumber}
+            onChangeText={setContactNumber}
+            keyboardType="phone-pad"
+          />
 
-              <TextInput
-                placeholder="Contact Number"
-                value={contactNumber}
-                onChangeText={setContactNumber}
-                keyboardType="phone-pad"
-                style={styles.input}
-                placeholderTextColor="#aaa"
-              />
+          <TextField
+            placeholder="Username"
+            value={username}
+            onChangeText={setUsername}
+            autoCapitalize="none"
+          />
 
-              <TextInput
-                placeholder="Username"
-                value={username}
-                onChangeText={setUsername}
-                autoCapitalize="none"
-                style={styles.input}
-                placeholderTextColor="#aaa"
-              />
+          <TextField
+            placeholder="Email"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
 
-              <TextInput
-                placeholder="Email"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                style={styles.input}
-                placeholderTextColor="#aaa"
-              />
+          <PasswordField
+            placeholder="Password"
+            value={password}
+            onChangeText={setPassword}
+          />
 
-              <TextInput
-                placeholder="Password"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                style={styles.input}
-                placeholderTextColor="#aaa"
-              />
+          <PasswordField
+            placeholder="Confirm Password"
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+          />
 
-              <TextInput
-                placeholder="Confirm Password"
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                secureTextEntry
-                style={styles.input}
-                placeholderTextColor="#aaa"
-              />
+          <GradientButton
+            title={loading ? 'Registering...' : 'Register'}
+            onPress={handleRegister}
+          />
 
-              <TouchableOpacity onPress={handleRegister} disabled={loading} style={{ borderRadius: 25, marginTop: 6, marginBottom: 10 }}>
-                <LinearGradient
-                  colors={['#205781', '#7AB2D3']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.button}
-                >
-                  <ThemedText style={styles.buttonText}>
-                    {loading ? 'Registering...' : 'Register'}
-                  </ThemedText>
-                </LinearGradient>
-              </TouchableOpacity>
-
-              <TouchableOpacity onPress={() => router.push('/login')} style={styles.registerLink}>
-                <ThemedText style={styles.registerText}>
-                  Already have an account? <ThemedText style={{ textDecorationLine: 'underline' }}>Login</ThemedText>
-                </ThemedText>
-              </TouchableOpacity>
-            </ThemedView>
-          </View>
+          <TouchableOpacity onPress={() => router.push('/login')} style={styles.registerLink}>
+            <ThemedText style={styles.registerText}>
+              Already have an account? <ThemedText style={{ textDecorationLine: 'underline' }}>Login</ThemedText>
+            </ThemedText>
+          </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
     </ThemedView>
@@ -291,69 +232,29 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   background: {
     flex: 1,
-    backgroundColor: '#f6f8fa',
+  },
+  header: {
+    width: '100%',
+    height: 160,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    paddingHorizontal: 20,
+    paddingTop: 65,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  headerSubtitle: {
+    fontSize: 15,
+    color: '#f1f3f6',
+    marginTop: 3,
   },
   container: {
     flex: 1,
     alignItems: 'center',
-    margin: 20,
-    paddingTop: 10,
-  },
-  cardWrapper: {
-    width: '100%',
-    maxWidth: 380,
-    alignItems: 'center',
-    alignSelf: 'center',
-    position: 'relative',
-    marginTop: 50,
-  },
-  mascot: {
-    width: 100,
-    height: 100,
-    position: 'absolute',
-    top: -50,
-    zIndex: 2,
-    alignSelf: 'center',
-    backgroundColor: 'transparent',
-  },
-  card: {
-    width: '100%',
-    backgroundColor: '#fff',
-    borderRadius: 18,
-    padding: 28,
-    paddingTop: 60,
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 6,
-    alignSelf: 'center',
-    alignItems: 'stretch',
-  },
-  pickerWrapper: {
-    backgroundColor: '#f1f3f6',
-    borderRadius: 25,
-    marginBottom: 16,
-    borderWidth: 0,
-    overflow: 'hidden',
-  },
-  picker: {
-    height: 50,
-    color: '#222',
-    width: '100%',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 6,
-    textAlign: 'center',
-    color: '#222',
-  },
-  subtitle: {
-    fontSize: 15,
-    color: '#666',
-    marginBottom: 28,
-    textAlign: 'center',
+    padding: 20,
   },
   errorMsg: {
     color: '#d32f2f',
@@ -365,35 +266,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 15,
   },
-  input: {
-    borderWidth: 0,
-    backgroundColor: '#f1f3f6',
-    padding: 14,
-    borderRadius: 25,
-    marginBottom: 16,
-    fontSize: 16,
-    color: '#222',
-  },
-  button: {
-    paddingVertical: 15,
-    borderRadius: 25,
-    marginTop: 6,
-    marginBottom: 10,
-    alignItems: 'center',
-    shadowColor: '#28a745',
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
-  },
-  buttonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 17,
-    letterSpacing: 0.5,
-  },
   registerLink: {
-    marginTop: 6,
+    marginTop: 10,
     alignItems: 'center',
   },
   registerText: {

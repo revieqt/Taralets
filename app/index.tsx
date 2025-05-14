@@ -16,7 +16,6 @@ export default function Index() {
 
           if (userDocSnap.exists()) {
             const userData = userDocSnap.data();
-            const userType = userData.type;
             const status = userData.status;
 
             if (status === 'Active') {
@@ -27,6 +26,7 @@ export default function Index() {
               Alert.alert('Account Inactive', 'Your account is not active. Please contact support.');
               router.replace('/login');
             }
+            
           } else {
             Alert.alert('Login Failed', 'User record not found.');
             router.replace('/login');

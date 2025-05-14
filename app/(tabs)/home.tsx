@@ -21,7 +21,7 @@ export default function HomeScreen() {
         <VerticalRule height="50%" color="#aaa" thickness={1}/>
       </View>
       
-      <TouchableOpacity onPress={() => router.push('/itineraries')} style={styles.menuButton}>
+      <TouchableOpacity onPress={() => router.push('/itineraries/itineraries')} style={styles.menuButton}>
         <Octicons name="paper-airplane" size={24} color="black" />
         <ThemedText>Itineraries</ThemedText>
       </TouchableOpacity>

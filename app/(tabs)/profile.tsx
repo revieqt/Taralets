@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, Image, TouchableOpacity, Modal, TextInput, Alert, Platform, KeyboardAvoidingView, ScrollView } from 'react-native';
+import { View, StyleSheet, Image, Modal, Alert, Platform, KeyboardAvoidingView, ScrollView , TouchableOpacity} from 'react-native';
 import { getAuth, signOut, EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'firebase/auth';
 import { router } from 'expo-router';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
@@ -7,6 +7,9 @@ import { getStorage } from 'firebase/storage';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Collapsible } from '@/components/Collapsible';
+import GradientButton from '@/components/GradientButton';
+import PasswordField from '@/components/PasswordField';
+import OutlineButton from '@/components/OutlineButton';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const Profile = () => {
@@ -61,16 +64,13 @@ const Profile = () => {
       });
   };
 
-  // Password strength check (simple example)
-  const isWeakPassword = (password: string) => password.length < 6;
-
   const handleChangePassword = async () => {
     setFormError('');
     if (!currentPassword || !newPassword || !confirmPassword) {
       setFormError('All fields are required.');
       return;
     }
-    if (isWeakPassword(newPassword)) {
+    if (newPassword.length < 6) {
       setFormError('New password is too weak (min 6 characters).');
       return;
     }
@@ -84,10 +84,8 @@ const Profile = () => {
         setFormError('User not found.');
         return;
       }
-      // Re-authenticate
       const credential = EmailAuthProvider.credential(user.email, currentPassword);
       await reauthenticateWithCredential(user, credential);
-      // Update password
       await updatePassword(user, newPassword);
       setModalVisible(false);
       setCurrentPassword('');
@@ -108,7 +106,7 @@ const Profile = () => {
   if (loading) {
     return (
       <ThemedView style={styles.loadingContainer}>
-        <Image source={require('../../assets/images/loading.gif')} style={styles.loadinggif}/>
+        <Image source={require('../../assets/images/loading.gif')} style={styles.loadinggif} />
       </ThemedView>
     );
   }
@@ -125,7 +123,12 @@ const Profile = () => {
                       userInfo.type === 'user' ? 'User' : 'Tour Guide';
 
   return (
-    <ThemedView style={styles.container}>
+  <ThemedView style={styles.container}>
+    <ScrollView
+      contentContainerStyle={styles.scrollContent}
+      showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
+    >
       {/* Gradient Header */}
       <LinearGradient
         colors={['#205781', '#7AB2D3']}
@@ -136,177 +139,136 @@ const Profile = () => {
       {/* Profile Image in front */}
       <View style={styles.profileImageWrapper}>
         <Image
-          source={
-            // profileImageUrl && profileImageUrl !== ''
-            //   ? { uri: profileImageUrl }: 
-              require('../../assets/images/defaultUser.jpg')
-          }
+          source={require('../../assets/images/defaultUser.jpg')}
           style={styles.profileImage}
           onError={() => setProfileImageUrl('')}
         />
       </View>
-      {/* Scrollable Content */}
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      >
-        {/* Name and Username */}
-        <View style={styles.nameSection}>
-          <ThemedText type="title" style={styles.nameText}>
-            {userInfo.fname} {userInfo.mname} {userInfo.lname}
-          </ThemedText>
-          <ThemedText style={styles.usernameText}>@{userInfo.username}</ThemedText>
-          <ThemedText style={styles.accountTypeText}>{accountType}</ThemedText>
-
-          <TouchableOpacity
-            style={styles.applyTourGuideBtn}
-            onPress={() => router.push('/tourGuideApplication')}
-            activeOpacity={0.85}
-          >
-            <ThemedText style={styles.applyTourGuideBtnText}>Apply as Tour Guide</ThemedText>
-          </TouchableOpacity>
-        </View>
-
-        {/* Options Section */}
-        <ThemedView style={styles.options}>
-          <Collapsible title="General Information" >
-            <ThemedText style={styles.collapsibleChild}>
-              Gender: {userInfo.gender}
-            </ThemedText>
-            <ThemedText style={styles.collapsibleChild}>
-              Email: {userInfo.email}
-            </ThemedText>
-            <ThemedText style={styles.collapsibleChild}>
-              Phone: {userInfo.contactNumber}
-            </ThemedText>
-            <ThemedText style={styles.collapsibleChild}>
-              Type: {accountType}
-            </ThemedText>
-            <ThemedText style={styles.collapsibleChild}>
-              Status: {userInfo.status}
-            </ThemedText>
-            <ThemedText style={styles.collapsibleChild}>
-              Created: {userInfo.createdOn?.toDate().toLocaleString()}
-            </ThemedText>
-          </Collapsible>
-          <Collapsible title="Privacy and Security">
-            <TouchableOpacity onPress={() => setModalVisible(true)}>
-              <ThemedText style={styles.collapsibleChild}>Change Password</ThemedText>
-            </TouchableOpacity>
-          </Collapsible>
-        </ThemedView>
-      </ScrollView>
-
-      <Modal
-        visible={modalVisible}
-        animationType="slide"
-        transparent
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <KeyboardAvoidingView
-          style={styles.modalOverlay}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        >
-          <ThemedView style={styles.modalCardWrapper}>
-            <ThemedText type="title" style={{ marginBottom: 10, color: '#205781', fontWeight: 'bold' }}>
-              Change Password
-            </ThemedText>
-            <ThemedText>Make your account secure by changing your password regularly.</ThemedText>
-
-            <TextInput
-              placeholder="Current Password"
-              secureTextEntry
-              style={[
-                styles.loginInput,
-                focusedInput === 'current' && styles.inputFocused
-              ]}
-              value={currentPassword}
-              onChangeText={setCurrentPassword}
-              placeholderTextColor="#aaa"
-              onFocus={() => setFocusedInput('current')}
-              onBlur={() => setFocusedInput(null)}
-            />
-
-            <TextInput
-              placeholder="New Password"
-              secureTextEntry
-              style={[
-                styles.loginInput,
-                focusedInput === 'new' && styles.inputFocused
-              ]}
-              value={newPassword}
-              onChangeText={setNewPassword}
-              placeholderTextColor="#aaa"
-              onFocus={() => setFocusedInput('new')}
-              onBlur={() => setFocusedInput(null)}
-            />
-
-            <TextInput
-              placeholder="Confirm Password"
-              secureTextEntry
-              style={[
-                styles.loginInput,
-                focusedInput === 'confirm' && styles.inputFocused
-              ]}
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              placeholderTextColor="#aaa"
-              onFocus={() => setFocusedInput('confirm')}
-              onBlur={() => setFocusedInput(null)}
-            />
-
-            {formError ? (
-              <ThemedText style={{ color: '#d32f2f', backgroundColor: '#fdecea', borderRadius: 8, paddingVertical: 8, paddingHorizontal: 12, marginBottom: 14, textAlign: 'center', fontSize: 15 }}>
-                {formError}
-              </ThemedText>
-            ) : null}
-
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-              {/* Cancel Button (Outline) */}
-              <TouchableOpacity
-                style={[styles.gradientButton, styles.outlineButton]}
-                onPress={() => {
-                  setModalVisible(false);
-                  setFormError('');
-                  setCurrentPassword('');
-                  setNewPassword('');
-                  setConfirmPassword('');
-                }}
-                activeOpacity={0.85}
-              >
-                <ThemedText style={styles.outlineButtonText}>Cancel</ThemedText>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.gradientButton} onPress={handleChangePassword} activeOpacity={0.85}>
-                <LinearGradient
-                  colors={['#205781', '#7AB2D3']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.gradientButtonBg}
-                >
-                  <ThemedText style={{ color: '#fff', fontWeight: 'bold' }}>Submit</ThemedText>
-                </LinearGradient>
-              </TouchableOpacity>
-            </View>
-          </ThemedView>
-        </KeyboardAvoidingView>
-      </Modal>
-
-      {/* Logout Button at the Bottom */}
-      <View style={styles.logoutContainer}>
-        <TouchableOpacity style={styles.gradientButton} onPress={handleLogout} activeOpacity={0.85}>
-          <LinearGradient
-            colors={['#205781', '#7AB2D3']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.gradientButtonBg}
-          >
-            <ThemedText style={styles.logoutButtonText}>Log Out</ThemedText>
-          </LinearGradient>
-        </TouchableOpacity>
+      {/* Name and Username */}
+      <View style={styles.nameSection}>
+        <ThemedText type="title" style={styles.nameText}>
+          {userInfo.fname} {userInfo.mname} {userInfo.lname}
+        </ThemedText>
+        <ThemedText style={styles.usernameText}>@{userInfo.username}</ThemedText>
+        <ThemedText style={styles.accountTypeText}>{accountType}</ThemedText>
       </View>
-    </ThemedView>
-  );
+
+      {/* Options Section */}
+      <ThemedView style={styles.options}>
+        <Collapsible title="General Information">
+          <ThemedText style={styles.collapsibleChild}>
+            Gender: {userInfo.gender}
+          </ThemedText>
+          <ThemedText style={styles.collapsibleChild}>
+            Email: {userInfo.email}
+          </ThemedText>
+          <ThemedText style={styles.collapsibleChild}>
+            Phone: {userInfo.contactNumber}
+          </ThemedText>
+          <ThemedText style={styles.collapsibleChild}>
+            Type: {accountType}
+          </ThemedText>
+          <ThemedText style={styles.collapsibleChild}>
+            Status: {userInfo.status}
+          </ThemedText>
+          <ThemedText style={styles.collapsibleChild}>
+            Created: {userInfo.createdOn?.toDate().toLocaleString()}
+          </ThemedText>
+        </Collapsible>
+        <Collapsible title="Tour Guide Registration">
+          <TouchableOpacity onPress={() => router.push('/tourGuideApplication')}>
+            <ThemedText style={styles.collapsibleChild}>Apply as Tour Guide</ThemedText>
+          </TouchableOpacity>
+        </Collapsible>
+
+        <Collapsible title="Privacy and Security">
+          <TouchableOpacity onPress={() => setModalVisible(true)}>
+            <ThemedText style={styles.collapsibleChild}>Change Password</ThemedText>
+          </TouchableOpacity>
+        </Collapsible>
+      </ThemedView>
+
+      <View style={styles.logoutContainer}>
+        <GradientButton
+          title="Log Out"
+          onPress={handleLogout}
+          gradientColors={['#205781', '#7AB2D3']}
+          textStyle={styles.logoutButtonText}
+        />
+      </View>
+    </ScrollView>
+
+    <Modal
+      visible={modalVisible}
+      animationType="slide"
+      transparent
+      onRequestClose={() => setModalVisible(false)}
+    >
+      <KeyboardAvoidingView
+        style={styles.modalOverlay}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ThemedView style={styles.modalCardWrapper}>
+          <ThemedText type="title" style={{ marginBottom: 10, color: '#205781', fontWeight: 'bold' }}>
+            Change Password
+          </ThemedText>
+          <ThemedText>Make your account secure by changing your password regularly.</ThemedText>
+
+          <PasswordField
+            placeholder="Current Password"
+            value={currentPassword}
+            onChangeText={setCurrentPassword}
+            onFocus={() => setFocusedInput('current')}
+            onBlur={() => setFocusedInput(null)}
+            isFocused={focusedInput === 'current'}
+          />
+
+          <PasswordField
+            placeholder="New Password"
+            value={newPassword}
+            onChangeText={setNewPassword}
+            onFocus={() => setFocusedInput('new')}
+            onBlur={() => setFocusedInput(null)}
+            isFocused={focusedInput === 'new'}
+          />
+
+          <PasswordField
+            placeholder="Confirm Password"
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+            onFocus={() => setFocusedInput('confirm')}
+            onBlur={() => setFocusedInput(null)}
+            isFocused={focusedInput === 'confirm'}
+          />
+
+          {formError ? (
+            <ThemedText style={{ color: '#d32f2f', backgroundColor: '#fdecea', borderRadius: 8, paddingVertical: 8, paddingHorizontal: 12, marginBottom: 14, textAlign: 'center', fontSize: 15 }}>
+              {formError}
+            </ThemedText>
+          ) : null}
+
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+            <OutlineButton
+              title="Cancel"
+              onPress={() => {
+                setModalVisible(false);
+                setFormError('');
+                setCurrentPassword('');
+                setNewPassword('');
+                setConfirmPassword('');
+              }}
+            />
+            <GradientButton
+              title="Submit"
+              onPress={handleChangePassword}
+              gradientColors={['#205781', '#7AB2D3']}
+            />
+          </View>
+        </ThemedView>
+      </KeyboardAvoidingView>
+    </Modal>
+  </ThemedView>
+);
 };
 
 const styles = StyleSheet.create({
@@ -392,14 +354,7 @@ const styles = StyleSheet.create({
     color: '#222',
   },
   logoutContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    width: '100%',
-    padding: 20,
-    backgroundColor: 'transparent',
-    alignItems: 'center',
-    zIndex: 10,
+    margin:15,
   },
   logoutButtonText: {
     color: '#fff',
@@ -422,7 +377,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     justifyContent: 'center',
     alignItems: 'center',
-    padding:20,
+    padding: 20,
   },
   modalCardWrapper: {
     width: '100%',
@@ -430,67 +385,6 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     position: 'relative',
     height: '100%',
-  },
-  loginInput: {
-    borderWidth: 0,
-    backgroundColor: '#f1f3f6',
-    padding: 14,
-    borderRadius: 25,
-    marginBottom: 16,
-    fontSize: 16,
-    color: '#222',
-  },
-  inputFocused: {
-    borderWidth: 2,
-    borderColor: '#000',
-    backgroundColor: '#f1f3f6',
-  },
-  gradientButton: {
-    flex: 1,
-    marginHorizontal: 4,
-    marginTop: 8,
-    paddingLeft: 0,
-    borderRadius: 25,
-    overflow: 'hidden',
-    minWidth: 180, // increased width for logout button
-    maxWidth: 320,
-  },
-  gradientButtonBg: {
-    borderRadius: 25,
-    paddingVertical: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  outlineButton: {
-    borderWidth: 2,
-    borderColor: '#205781',
-    backgroundColor: 'transparent',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  outlineButtonText: {
-    color: '#205781',
-    fontWeight: 'bold',
-    fontSize: 16,
-    textAlign: 'center',
-  },
-  applyTourGuideBtn: {
-    borderWidth: 2,
-    borderColor: '#205781',
-    borderRadius: 22,
-    paddingVertical: 8,
-    paddingHorizontal: 28,
-    marginTop: 10,
-    marginBottom: 10,
-    alignSelf: 'center',
-    backgroundColor: 'transparent',
-  },
-  applyTourGuideBtnText: {
-    color: '#205781',
-    fontWeight: 'bold',
-    fontSize: 16,
-    textAlign: 'center',
-    letterSpacing: 0.5,
   },
 });
 
