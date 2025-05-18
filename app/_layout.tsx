@@ -33,13 +33,15 @@ export default function RootLayout() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="routes" options={{ headerShown: true }} />
         <Stack.Screen name="itineraries/itineraries" options={{ headerShown: false}} />
+        <Stack.Screen name="itineraries/create" options={{ headerShown: false}} />
+        <Stack.Screen name="mapPicker" options={{ headerShown: false}} />
         <Stack.Screen name="weather" options={{ headerShown: false}} />
         <Stack.Screen name="tourGuideApplication" options={{ headerShown: false }} />
         <Stack.Screen name="login" options={{ headerShown: false }} />
         <Stack.Screen name="register" options={{ headerShown: false }} />
         <Stack.Screen name="index" options={{ headerShown: false }} />
 
-        <Stack.Screen name="+not-found" />
+        <Stack.Screen name="+not-found" options={{ headerShown: false }}/>
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>

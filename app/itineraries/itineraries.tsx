@@ -6,6 +6,7 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 import { router } from "expo-router";
 import { db } from '../../auth/firebaseConfig';
 import { collection, query, where, getDocs } from 'firebase/firestore';
+import { getAuth } from "firebase/auth";
 
 function formatDate(date: any) {
   if (!date) return '';
@@ -30,8 +31,26 @@ export default function TabTwoScreen() {
     const fetchItineraries = async () => {
       setLoading(true);
       try {
-        const qPending = query(collection(db, 'itineraries'), where('status', '==', 'Active'));
-        const qArchive = query(collection(db, 'itineraries'), where('status', '==', 'Archive'));
+        const auth = getAuth();
+        const user = auth.currentUser;
+        if (!user) {
+          setPendingItineraries([]);
+          setArchivedItineraries([]);
+          setLoading(false);
+          return;
+        }
+        const userId = user.uid;
+
+        const qPending = query(
+          collection(db, 'itineraries'),
+          where('status', '==', 'Active'),
+          where('userID', '==', userId)
+        );
+        const qArchive = query(
+          collection(db, 'itineraries'),
+          where('status', '==', 'Archive'),
+          where('userID', '==', userId)
+        );
 
         const [pendingSnap, archiveSnap] = await Promise.all([
           getDocs(qPending),

@@ -1,4 +1,4 @@
-import { Dimensions, StyleSheet, TouchableOpacity, Text, View, Image } from 'react-native';
+import { Dimensions, StyleSheet, TouchableOpacity, Text, View } from 'react-native';
 import Animated, {
   useAnimatedRef,
   useAnimatedStyle,
@@ -12,19 +12,19 @@ import { ThemedView } from '@/components/ThemedView';
 import { useBottomTabOverflow } from '@/components/ui/TabBarBackground';
 import { useState, useEffect } from 'react';
 import { ThemedText } from './ThemedText';
-import userLocation from '@/utils/userLocationAddress'; // Assuming your location utility is imported
-import { getUserLocation } from '@/services/mapService'; // Use your mapService here
-
-import MapView, { PROVIDER_DEFAULT, Marker, UrlTile } from 'react-native-maps';
+import userLocation from '@/utils/userLocationAddress';
+import { getUserLocation } from '@/services/mapService';
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 const HEADER_HEIGHT = 250;
 const FLOATING_VIEW_HEIGHT = 85;
 const EXPANDED_HEIGHT = SCREEN_HEIGHT * 0.9;
 
-type Props = React.PropsWithChildren<{}>;
+type Props = React.PropsWithChildren<{
+  header?: (height: number) => React.ReactNode;
+}>;
 
-export default function ParallaxScrollView({ children }: Props) {
+export default function ParallaxScrollView({ children, header }: Props) {
   const [location, setLocation] = useState<{ street: string; city: string } | null>(null);
   const [userCoords, setUserCoords] = useState<{ latitude: number; longitude: number } | null>(null);
 
@@ -100,7 +100,9 @@ export default function ParallaxScrollView({ children }: Props) {
       >
         <Animated.View style={[styles.headerContainer, containerStyle]}>
           <ThemedView style={styles.header}>
-
+            <View style={StyleSheet.absoluteFill}>
+              {header && header(animatedHeight.value)}
+            </View>
             {!isExpanded && (
               <TouchableOpacity style={styles.expandButton} onPress={handleExpand}>
                 <Text style={styles.buttonText}>Expand</Text>
@@ -116,7 +118,6 @@ export default function ParallaxScrollView({ children }: Props) {
 
         <Animated.View style={floatingStyle}>
           <ThemedView style={styles.locationContainer}>
-            <Image source={require('../assets/images/tara_readingmap.png')} style={styles.image} />
             {location ? (
               <View style={styles.locationTextContainer}>
                 <ThemedText>You are currently at:</ThemedText>
@@ -148,22 +149,25 @@ const styles = StyleSheet.create({
   },
   header: {
     flex: 1,
-    backgroundColor: 'red',
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
+    borderBottomLeftRadius: 16,
+    borderBottomRightRadius: 16,
   },
   map: {
     ...StyleSheet.absoluteFillObject,
     borderRadius: 16,
+    width: '100%',
+    height: '100%',
   },
   expandButton: {
     position: 'absolute',
-    bottom: 50,
+    bottom: 55,
     right: 16,
     backgroundColor: 'rgba(0,0,0,0.5)',
     padding: 8,
-    borderRadius: 4,
+    borderRadius: 20,
     zIndex: 20,
   },
   collapseButton: {
@@ -172,7 +176,7 @@ const styles = StyleSheet.create({
     right: 16,
     backgroundColor: 'rgba(0,0,0,0.5)',
     padding: 8,
-    borderRadius: 4,
+    borderRadius: 20,
     zIndex: 10,
   },
   buttonText: {
@@ -187,21 +191,19 @@ const styles = StyleSheet.create({
   locationContainer: {
     height: 80,
     width: '100%',
-    borderRadius: 10,
+    borderRadius: 30,
     borderColor: '#ccc',
-    borderWidth: 1,
-  },
-  image: {
-    position: 'absolute',
-    width: 100,
-    resizeMode: 'contain',
-    marginTop: -225,
-    marginLeft: 3,
-    borderRadius: 10,
+    // Modern shadow for iOS
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    // Modern shadow for Android
+    elevation: 5,
   },
   locationTextContainer: {
-    marginTop: 12,
-    marginLeft: 90,
+    marginTop: 13,
+    marginLeft: 20,
     overflow: 'hidden',
   },
   mapContainer: {

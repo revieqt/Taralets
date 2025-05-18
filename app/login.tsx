@@ -92,10 +92,6 @@ export default function LoginScreen() {
         />
 
         <ThemedText style={{padding:20}}>----- or -----</ThemedText>
-        <OutlineButton
-          title="Sign in with Google"
-          onPress={() => {}}
-        />
 
         <TouchableOpacity onPress={() => router.push('/register')} style={styles.registerLink}>
           <ThemedText style={styles.registerText}>
@@ -110,7 +106,6 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   background: {
     flex: 1,
-    backgroundColor: '#f6f8fa',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
@@ -133,7 +128,6 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 15,
-    color: '#666',
     marginBottom: 28,
     textAlign: 'center',
   },

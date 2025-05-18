@@ -157,6 +157,12 @@ const Profile = () => {
       <ThemedView style={styles.options}>
         <Collapsible title="General Information">
           <ThemedText style={styles.collapsibleChild}>
+            Name: {userInfo.fname} {userInfo.mname} {userInfo.lname}
+          </ThemedText>
+          <ThemedText style={styles.collapsibleChild}>
+            Username: {userInfo.username}
+          </ThemedText>
+          <ThemedText style={styles.collapsibleChild}>
             Gender: {userInfo.gender}
           </ThemedText>
           <ThemedText style={styles.collapsibleChild}>
@@ -175,10 +181,28 @@ const Profile = () => {
             Created: {userInfo.createdOn?.toDate().toLocaleString()}
           </ThemedText>
         </Collapsible>
-        <Collapsible title="Tour Guide Registration">
+
+        <Collapsible title="Tour Guide Settings">
+
+        {userInfo.type === 'tourGuide' ? 
+
+          <View>
+            <TouchableOpacity onPress={() => router.push('/tourGuideApplication')}>
+              <ThemedText style={styles.collapsibleChild}>View Tour Guide Information</ThemedText>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={() => router.push('/tourGuideApplication')}>
+              <ThemedText style={styles.collapsibleChild}>Manage Tours</ThemedText>
+            </TouchableOpacity>
+          </View>
+          
+          :
+
           <TouchableOpacity onPress={() => router.push('/tourGuideApplication')}>
             <ThemedText style={styles.collapsibleChild}>Apply as Tour Guide</ThemedText>
           </TouchableOpacity>
+        }
+          
         </Collapsible>
 
         <Collapsible title="Privacy and Security">
