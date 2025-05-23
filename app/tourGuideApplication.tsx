@@ -164,7 +164,6 @@ export default function TourGuideApplication() {
 const styles = StyleSheet.create({
   background: {
     flex: 1,
-    backgroundColor: '#f6f8fa',
   },
   header: {
     width: '100%',

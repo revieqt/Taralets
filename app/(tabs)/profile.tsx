@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, Image, Modal, Alert, Platform, KeyboardAvoidingView, ScrollView , TouchableOpacity} from 'react-native';
+import { View, StyleSheet, Image, Modal, Alert, Platform, KeyboardAvoidingView, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { getAuth, signOut, EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'firebase/auth';
 import { router } from 'expo-router';
-import { getFirestore, doc, getDoc } from 'firebase/firestore';
-import { getStorage } from 'firebase/storage';
+import { getFirestore, doc, getDoc, updateDoc } from 'firebase/firestore';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Collapsible } from '@/components/Collapsible';
@@ -11,11 +11,13 @@ import GradientButton from '@/components/GradientButton';
 import PasswordField from '@/components/PasswordField';
 import OutlineButton from '@/components/OutlineButton';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as ImagePicker from 'expo-image-picker';
 
 const Profile = () => {
   const [userInfo, setUserInfo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   // Change Password Modal State
   const [modalVisible, setModalVisible] = useState(false);
@@ -53,6 +55,77 @@ const Profile = () => {
 
     fetchUserData();
   }, [auth.currentUser]);
+
+  // Handle profile image change
+  const handleProfileImagePress = async () => {
+    Alert.alert(
+      'Change Profile Photo',
+      'Choose an option',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Choose from Gallery',
+          onPress: async () => {
+            const result = await ImagePicker.launchImageLibraryAsync({
+              mediaTypes: ImagePicker.MediaTypeOptions.Images,
+              allowsEditing: true,
+              aspect: [1, 1],
+              quality: 0.7,
+            });
+            if (!result.canceled && result.assets && result.assets.length > 0) {
+              uploadProfileImage(result.assets[0].uri);
+            }
+          },
+        },
+        {
+          text: 'Take Photo',
+          onPress: async () => {
+            const result = await ImagePicker.launchCameraAsync({
+              allowsEditing: true,
+              aspect: [1, 1],
+              quality: 0.7,
+            });
+            if (!result.canceled && result.assets && result.assets.length > 0) {
+              uploadProfileImage(result.assets[0].uri);
+            }
+          },
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+
+  // Upload image and update Firestore
+  const uploadProfileImage = async (uri: string) => {
+    try {
+      setUploading(true);
+      const user = auth.currentUser;
+      if (!user) return;
+
+      // Convert image to blob
+      const response = await fetch(uri);
+      const blob = await response.blob();
+
+      // Upload to Firebase Storage
+      const imageRef = ref(storage, `profileImages/${user.uid}.jpg`);
+      await uploadBytes(imageRef, blob);
+
+      // Get download URL
+      const downloadURL = await getDownloadURL(imageRef);
+
+      // Update Firestore user document
+      const userRef = doc(firestore, 'users', user.uid);
+      await updateDoc(userRef, { profileImage: downloadURL });
+
+      setProfileImageUrl(downloadURL);
+      Alert.alert('Success', 'Profile photo updated!');
+    } catch (error) {
+      Alert.alert('Error', 'Failed to update profile photo.');
+      console.error(error);
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleLogout = () => {
     signOut(auth)
@@ -123,176 +196,192 @@ const Profile = () => {
                       userInfo.type === 'user' ? 'User' : 'Tour Guide';
 
   return (
-  <ThemedView style={styles.container}>
-    <ScrollView
-      contentContainerStyle={styles.scrollContent}
-      showsVerticalScrollIndicator={false}
-      keyboardShouldPersistTaps="handled"
-    >
-      {/* Gradient Header */}
-      <LinearGradient
-        colors={['#205781', '#7AB2D3']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={styles.header}
-      />
-      {/* Profile Image in front */}
-      <View style={styles.profileImageWrapper}>
-        <Image
-          source={require('../../assets/images/defaultUser.jpg')}
-          style={styles.profileImage}
-          onError={() => setProfileImageUrl('')}
-        />
-      </View>
-      {/* Name and Username */}
-      <View style={styles.nameSection}>
-        <ThemedText type="title" style={styles.nameText}>
-          {userInfo.fname} {userInfo.mname} {userInfo.lname}
-        </ThemedText>
-        <ThemedText style={styles.usernameText}>@{userInfo.username}</ThemedText>
-        <ThemedText style={styles.accountTypeText}>{accountType}</ThemedText>
-      </View>
-
-      {/* Options Section */}
-      <ThemedView style={styles.options}>
-        <Collapsible title="General Information">
-          <ThemedText style={styles.collapsibleChild}>
-            Name: {userInfo.fname} {userInfo.mname} {userInfo.lname}
-          </ThemedText>
-          <ThemedText style={styles.collapsibleChild}>
-            Username: {userInfo.username}
-          </ThemedText>
-          <ThemedText style={styles.collapsibleChild}>
-            Gender: {userInfo.gender}
-          </ThemedText>
-          <ThemedText style={styles.collapsibleChild}>
-            Email: {userInfo.email}
-          </ThemedText>
-          <ThemedText style={styles.collapsibleChild}>
-            Phone: {userInfo.contactNumber}
-          </ThemedText>
-          <ThemedText style={styles.collapsibleChild}>
-            Type: {accountType}
-          </ThemedText>
-          <ThemedText style={styles.collapsibleChild}>
-            Status: {userInfo.status}
-          </ThemedText>
-          <ThemedText style={styles.collapsibleChild}>
-            Created: {userInfo.createdOn?.toDate().toLocaleString()}
-          </ThemedText>
-        </Collapsible>
-
-        <Collapsible title="Tour Guide Settings">
-
-        {userInfo.type === 'tourGuide' ? 
-
-          <View>
-            <TouchableOpacity onPress={() => router.push('/tourGuideApplication')}>
-              <ThemedText style={styles.collapsibleChild}>View Tour Guide Information</ThemedText>
-            </TouchableOpacity>
-
-            <TouchableOpacity onPress={() => router.push('/tourGuideApplication')}>
-              <ThemedText style={styles.collapsibleChild}>Manage Tours</ThemedText>
-            </TouchableOpacity>
-          </View>
-          
-          :
-
-          <TouchableOpacity onPress={() => router.push('/tourGuideApplication')}>
-            <ThemedText style={styles.collapsibleChild}>Apply as Tour Guide</ThemedText>
-          </TouchableOpacity>
-        }
-          
-        </Collapsible>
-
-        <Collapsible title="Privacy and Security">
-          <TouchableOpacity onPress={() => setModalVisible(true)}>
-            <ThemedText style={styles.collapsibleChild}>Change Password</ThemedText>
-          </TouchableOpacity>
-        </Collapsible>
-      </ThemedView>
-
-      <View style={styles.logoutContainer}>
-        <GradientButton
-          title="Log Out"
-          onPress={handleLogout}
-          gradientColors={['#205781', '#7AB2D3']}
-          textStyle={styles.logoutButtonText}
-        />
-      </View>
-    </ScrollView>
-
-    <Modal
-      visible={modalVisible}
-      animationType="slide"
-      transparent
-      onRequestClose={() => setModalVisible(false)}
-    >
-      <KeyboardAvoidingView
-        style={styles.modalOverlay}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    <ThemedView style={styles.container}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
-        <ThemedView style={styles.modalCardWrapper}>
-          <ThemedText type="title" style={{ marginBottom: 10, color: '#205781', fontWeight: 'bold' }}>
-            Change Password
+        {/* Gradient Header */}
+        <LinearGradient
+          colors={['#205781', '#7AB2D3']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.header}
+        />
+        {/* Profile Image in front */}
+        <TouchableOpacity style={styles.profileImageWrapper} onPress={handleProfileImagePress} disabled={uploading}>
+          <Image
+            source={
+              profileImageUrl
+                ? { uri: profileImageUrl }
+                : require('../../assets/images/defaultUser.jpg')
+            }
+            style={styles.profileImage}
+            onError={() => setProfileImageUrl('')}
+          />
+          {uploading && (
+            <View style={{
+              ...StyleSheet.absoluteFillObject,
+              backgroundColor: 'rgba(255,255,255,0.7)',
+              justifyContent: 'center',
+              alignItems: 'center',
+              borderRadius: 55,
+            }}>
+              <ActivityIndicator size="small" color="#205781" />
+              <ThemedText>Uploading...</ThemedText>
+            </View>
+          )}
+        </TouchableOpacity>
+        {/* Name and Username */}
+        <View style={styles.nameSection}>
+          <ThemedText type="title" style={styles.nameText}>
+            {userInfo.fname} {userInfo.mname} {userInfo.lname}
           </ThemedText>
-          <ThemedText>Make your account secure by changing your password regularly.</ThemedText>
+          <ThemedText style={styles.usernameText}>@{userInfo.username}</ThemedText>
+          <ThemedText style={styles.accountTypeText}>{accountType}</ThemedText>
+        </View>
 
-          <PasswordField
-            placeholder="Current Password"
-            value={currentPassword}
-            onChangeText={setCurrentPassword}
-            onFocus={() => setFocusedInput('current')}
-            onBlur={() => setFocusedInput(null)}
-            isFocused={focusedInput === 'current'}
-          />
-
-          <PasswordField
-            placeholder="New Password"
-            value={newPassword}
-            onChangeText={setNewPassword}
-            onFocus={() => setFocusedInput('new')}
-            onBlur={() => setFocusedInput(null)}
-            isFocused={focusedInput === 'new'}
-          />
-
-          <PasswordField
-            placeholder="Confirm Password"
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            onFocus={() => setFocusedInput('confirm')}
-            onBlur={() => setFocusedInput(null)}
-            isFocused={focusedInput === 'confirm'}
-          />
-
-          {formError ? (
-            <ThemedText style={{ color: '#d32f2f', backgroundColor: '#fdecea', borderRadius: 8, paddingVertical: 8, paddingHorizontal: 12, marginBottom: 14, textAlign: 'center', fontSize: 15 }}>
-              {formError}
+        {/* Options Section */}
+        <ThemedView style={styles.options}>
+          <Collapsible title="General Information">
+            <ThemedText style={styles.collapsibleChild}>
+              Name: {userInfo.fname} {userInfo.mname} {userInfo.lname}
             </ThemedText>
-          ) : null}
+            <ThemedText style={styles.collapsibleChild}>
+              Username: {userInfo.username}
+            </ThemedText>
+            <ThemedText style={styles.collapsibleChild}>
+              Gender: {userInfo.gender}
+            </ThemedText>
+            <ThemedText style={styles.collapsibleChild}>
+              Email: {userInfo.email}
+            </ThemedText>
+            <ThemedText style={styles.collapsibleChild}>
+              Phone: {userInfo.contactNumber}
+            </ThemedText>
+            <ThemedText style={styles.collapsibleChild}>
+              Type: {accountType}
+            </ThemedText>
+            <ThemedText style={styles.collapsibleChild}>
+              Status: {userInfo.status}
+            </ThemedText>
+            <ThemedText style={styles.collapsibleChild}>
+              Created: {userInfo.createdOn?.toDate().toLocaleString()}
+            </ThemedText>
+          </Collapsible>
 
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-            <OutlineButton
-              title="Cancel"
-              onPress={() => {
-                setModalVisible(false);
-                setFormError('');
-                setCurrentPassword('');
-                setNewPassword('');
-                setConfirmPassword('');
-              }}
-            />
-            <GradientButton
-              title="Submit"
-              onPress={handleChangePassword}
-              gradientColors={['#205781', '#7AB2D3']}
-            />
-          </View>
+          <Collapsible title="Tour Guide Settings">
+
+          {userInfo.type === 'tourGuide' ? 
+
+            <View>
+              <TouchableOpacity onPress={() => router.push('/tourGuideApplication')}>
+                <ThemedText style={styles.collapsibleChild}>View Tour Guide Information</ThemedText>
+              </TouchableOpacity>
+
+              <TouchableOpacity onPress={() => router.push('/tourGuideApplication')}>
+                <ThemedText style={styles.collapsibleChild}>Manage Tours</ThemedText>
+              </TouchableOpacity>
+            </View>
+            
+            :
+
+            <TouchableOpacity onPress={() => router.push('/tourGuideApplication')}>
+              <ThemedText style={styles.collapsibleChild}>Apply as Tour Guide</ThemedText>
+            </TouchableOpacity>
+          }
+            
+          </Collapsible>
+
+          <Collapsible title="Privacy and Security">
+            <TouchableOpacity onPress={() => setModalVisible(true)}>
+              <ThemedText style={styles.collapsibleChild}>Change Password</ThemedText>
+            </TouchableOpacity>
+          </Collapsible>
         </ThemedView>
-      </KeyboardAvoidingView>
-    </Modal>
-  </ThemedView>
-);
+
+        <View style={styles.logoutContainer}>
+          <GradientButton
+            title="Log Out"
+            onPress={handleLogout}
+            gradientColors={['#205781', '#7AB2D3']}
+            textStyle={styles.logoutButtonText}
+          />
+        </View>
+      </ScrollView>
+
+      <Modal
+        visible={modalVisible}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          <ThemedView style={styles.modalCardWrapper}>
+            <ThemedText type="title" style={{ marginBottom: 10, color: '#205781', fontWeight: 'bold' }}>
+              Change Password
+            </ThemedText>
+            <ThemedText>Make your account secure by changing your password regularly.</ThemedText>
+
+            <PasswordField
+              placeholder="Current Password"
+              value={currentPassword}
+              onChangeText={setCurrentPassword}
+              onFocus={() => setFocusedInput('current')}
+              onBlur={() => setFocusedInput(null)}
+              isFocused={focusedInput === 'current'}
+            />
+
+            <PasswordField
+              placeholder="New Password"
+              value={newPassword}
+              onChangeText={setNewPassword}
+              onFocus={() => setFocusedInput('new')}
+              onBlur={() => setFocusedInput(null)}
+              isFocused={focusedInput === 'new'}
+            />
+
+            <PasswordField
+              placeholder="Confirm Password"
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              onFocus={() => setFocusedInput('confirm')}
+              onBlur={() => setFocusedInput(null)}
+              isFocused={focusedInput === 'confirm'}
+            />
+
+            {formError ? (
+              <ThemedText style={{ color: '#d32f2f', backgroundColor: '#fdecea', borderRadius: 8, paddingVertical: 8, paddingHorizontal: 12, marginBottom: 14, textAlign: 'center', fontSize: 15 }}>
+                {formError}
+              </ThemedText>
+            ) : null}
+
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+              <OutlineButton
+                title="Cancel"
+                onPress={() => {
+                  setModalVisible(false);
+                  setFormError('');
+                  setCurrentPassword('');
+                  setNewPassword('');
+                  setConfirmPassword('');
+                }}
+              />
+              <GradientButton
+                title="Submit"
+                onPress={handleChangePassword}
+                gradientColors={['#205781', '#7AB2D3']}
+              />
+            </View>
+          </ThemedView>
+        </KeyboardAvoidingView>
+      </Modal>
+    </ThemedView>
+  );
 };
 
 const styles = StyleSheet.create({
@@ -346,7 +435,6 @@ const styles = StyleSheet.create({
   nameText: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#222',
   },
   usernameText: {
     fontSize: 16,
@@ -363,7 +451,6 @@ const styles = StyleSheet.create({
     marginTop: 10,
     padding: 15,
     borderRadius: 14,
-    backgroundColor: '#fff',
     marginHorizontal: 16,
     elevation: 2,
     gap: 20,
@@ -375,7 +462,6 @@ const styles = StyleSheet.create({
   collapsibleChild: {
     padding: 4,
     fontSize: 15,
-    color: '#222',
   },
   logoutContainer: {
     margin:15,
@@ -398,10 +484,8 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'white',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
   },
   modalCardWrapper: {
     width: '100%',
@@ -409,6 +493,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     position: 'relative',
     height: '100%',
+    padding: 20,
   },
 });
 

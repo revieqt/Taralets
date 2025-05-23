@@ -4,9 +4,6 @@ import { OpaqueColorValue, StyleProp, ViewStyle } from 'react-native';
 
 export type IconSymbolName = React.ComponentProps<typeof AntDesign>['name'];
 
-/**
- * An icon component that uses FontAwesome directly.
- */
 export function IconSymbol({
   name,
   size = 24,

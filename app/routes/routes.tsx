@@ -20,63 +20,63 @@ function formatDate(date: any) {
   }
 }
 
-export default function TabTwoScreen() {
+export default function RoutesScreen() {
   const [selectedTab, setSelectedTab] = useState<'pending' | 'archive'>('pending');
-  const [pendingItineraries, setPendingItineraries] = useState<any[]>([]);
-  const [archivedItineraries, setArchivedItineraries] = useState<any[]>([]);
+  const [pendingRoutes, setPendingRoutes] = useState<any[]>([]);
+  const [archivedRoutes, setArchivedRoutes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchItineraries = async () => {
+    const fetchRoutes = async () => {
       setLoading(true);
       try {
         const auth = getAuth();
         const user = auth.currentUser;
         if (!user) {
-          setPendingItineraries([]);
-          setArchivedItineraries([]);
+          setPendingRoutes([]);
+          setArchivedRoutes([]);
           setLoading(false);
           return;
         }
         const userId = user.uid;
 
-        const qPending = query(
-          collection(db, 'itineraries'),
-          where('status', '==', 'Active'),
+        // Fetch all routes for the user
+        const q = query(
+          collection(db, 'routes'),
           where('userID', '==', userId)
         );
-        const qArchive = query(
-          collection(db, 'itineraries'),
-          where('status', '==', 'Archive'),
-          where('userID', '==', userId)
-        );
+        const snap = await getDocs(q);
 
-        const [pendingSnap, archiveSnap] = await Promise.all([
-          getDocs(qPending),
-          getDocs(qArchive),
-        ]);
+        // Separate routes by status
+        const pending: any[] = [];
+        const archive: any[] = [];
+        snap.docs.forEach(doc => {
+          const data = { id: doc.id, ...doc.data() };
+          if (data.status === 'forLater' || data.status === 'active' || data.status === 'Active') {
+            pending.push(data);
+          } else {
+            archive.push(data);
+          }
+        });
 
-        setPendingItineraries(
-          pendingSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-        );
-        setArchivedItineraries(
-          archiveSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-        );
+        setPendingRoutes(pending);
+        setArchivedRoutes(archive);
       } catch (e) {
-        setPendingItineraries([]);
-        setArchivedItineraries([]);
+        setPendingRoutes([]);
+        setArchivedRoutes([]);
       }
       setLoading(false);
     };
-    fetchItineraries();
+    fetchRoutes();
   }, []);
 
   const renderItem = ({ item }: { item: any }) => (
     <View style={styles.item}>
       <View>
-        <ThemedText style={styles.itemName}>{item.name}</ThemedText>
+        <ThemedText style={styles.itemName}>{item.name || 'Route'}</ThemedText>
         <ThemedText style={styles.itemDates}>
-          {formatDate(item.startOn)} - {formatDate(item.endOn)}
+          {/* If you want to display dates, you can extract from item.location or createdOn */}
+          {item.createdOn && item.createdOn.toDate ? item.createdOn.toDate().toLocaleDateString() : ''}
         </ThemedText>
       </View>
       <ThemedText style={styles.itemStatus}>{item.status}</ThemedText>
@@ -96,7 +96,7 @@ export default function TabTwoScreen() {
         >
           <IconSymbol size={24} name="left" color={"#cccccc"} />
         </TouchableOpacity>
-        <ThemedText type='subtitle'>Itineraries</ThemedText>
+        <ThemedText type='subtitle'>Routes</ThemedText>
       </ThemedView>
 
       {/* Tab Switcher */}
@@ -130,31 +130,31 @@ export default function TabTwoScreen() {
         {loading ? (
           <ThemedText style={{ textAlign: 'center', marginTop: 20 }}>Loading...</ThemedText>
         ) : selectedTab === 'pending' ? (
-          pendingItineraries.length > 0 ? (
+          pendingRoutes.length > 0 ? (
             <FlatList
-              data={pendingItineraries}
+              data={pendingRoutes}
               keyExtractor={item => item.id}
               renderItem={renderItem}
               contentContainerStyle={{ paddingBottom: 30 }}
             />
           ) : (
-            <ThemedText style={{ textAlign: 'center', marginTop: 20 }}>No pending itineraries.</ThemedText>
+            <ThemedText style={{ textAlign: 'center', marginTop: 20 }}>No pending routes.</ThemedText>
           )
         ) : (
-          archivedItineraries.length > 0 ? (
+          archivedRoutes.length > 0 ? (
             <FlatList
-              data={archivedItineraries}
+              data={archivedRoutes}
               keyExtractor={item => item.id}
               renderItem={renderItem}
               contentContainerStyle={{ paddingBottom: 30 }}
             />
           ) : (
-            <ThemedText style={{ textAlign: 'center', marginTop: 20 }}>No archived itineraries.</ThemedText>
+            <ThemedText style={{ textAlign: 'center', marginTop: 20 }}>No archived routes.</ThemedText>
           )
         )}
       </ThemedView>
       
-      <TouchableOpacity style={styles.addButton} onPress={() => router.push("/itineraries/create")}>
+      <TouchableOpacity style={styles.addButton} onPress={() => router.push("/routes/create")}>
         <IconSymbol size={30} name="plus" color={"white"} />
       </TouchableOpacity>
     </ThemedView>

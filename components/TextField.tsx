@@ -11,6 +11,7 @@ interface TextFieldProps {
   isFocused?: boolean;
   keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad';
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
+  style?: any;
 }
 
 const TextField: React.FC<TextFieldProps> = ({
@@ -22,6 +23,7 @@ const TextField: React.FC<TextFieldProps> = ({
   isFocused: isFocusedProp,
   keyboardType = 'default',
   autoCapitalize = 'none',
+  style,
 }) => {
   // Use themed colors
   const backgroundColor = useThemeColor({}, 'background');
@@ -78,6 +80,7 @@ const TextField: React.FC<TextFieldProps> = ({
         styles.inputWrapper,
         { backgroundColor },
         { borderColor: focused ? borderColor : '#cccccc', borderWidth: 1 },
+        style
       ]}
     >
       <Animated.Text style={labelStyle}>{placeholder}</Animated.Text>

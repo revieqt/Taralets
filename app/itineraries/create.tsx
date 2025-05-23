@@ -32,20 +32,20 @@ export default function CreateItinerary() {
   const router = useRouter();
   const params = useLocalSearchParams();
 
-  const [name, setName] = useState('');
-  const [startOn, setStartOn] = useState<Date | null>(null);
-  const [endOn, setEndOn] = useState<Date | null>(null);
+  const [name, setName] = useState(params.name ?? '');
+  const [startOn, setStartOn] = useState<Date | null>(params.startOn ? new Date(params.startOn as string) : null);
+  const [endOn, setEndOn] = useState<Date | null>(params.endOn ? new Date(params.endOn as string) : null);
   const [errorMsg, setErrorMsg] = useState('');
   const [loading, setLoading] = useState(false);
 
   // Radio button state
-  const [planDaily, setPlanDaily] = useState(false);
+  const [planDaily, setPlanDaily] = useState(params.planDaily === 'true' ? true : false);
 
   // For non-daily plan
-  const [locations, setLocations] = useState<LocationItem[]>([]);
+  const [locations, setLocations] = useState<LocationItem[]>(params.locations ? JSON.parse(params.locations as string) : []);
   const [showLocationInput, setShowLocationInput] = useState(false);
-  const [tempLocation, setTempLocation] = useState('');
-  const [tempNote, setTempNote] = useState('');
+  const [tempLocation, setTempLocation] = useState(params.tempLocation ?? '');
+  const [tempNote, setTempNote] = useState(params.tempNote ?? '');
   const [tempLatLng, setTempLatLng] = useState<{ lat: number; lng: number } | null>(null);
   const [editingLocIdx, setEditingLocIdx] = useState<number | null>(null);
   const [editLocValue, setEditLocValue] = useState('');
@@ -55,36 +55,37 @@ export default function CreateItinerary() {
   // For daily plan
   const [dailyLocations, setDailyLocations] = useState<
     { date: Date; locations: LocationItem[] }[]
-  >([]);
+  >(params.dailyLocations ? JSON.parse(params.dailyLocations as string, (key, value) => {
+    if (key === 'date') return new Date(value);
+    return value;
+  }) : []);
 
-  // Handle params from mapPicker
+  // Handle params from mapPicker for non-daily
   useEffect(() => {
     if (
-      params.pickedLocationName &&
       params.pickedLatitude &&
       params.pickedLongitude &&
       params.mapPickerFor
     ) {
       const lat = Number(params.pickedLatitude);
       const lng = Number(params.pickedLongitude);
-      const name = String(params.pickedLocationName);
 
       if (params.mapPickerFor === 'add') {
-        setTempLocation(name);
+        setTempLocation(`${lat}, ${lng}`);
         setTempLatLng({ lat, lng });
+        if (params.tempNote) setTempNote(params.tempNote as string);
       } else if (typeof params.mapPickerFor === 'string' && params.mapPickerFor.startsWith('edit-')) {
-        setEditLocValue(name);
+        setEditLocValue(`${lat}, ${lng}`);
         setEditLatLng({ lat, lng });
       }
       // No need to handle daily here, handled in child
       router.setParams({
-        pickedLocationName: undefined,
         pickedLatitude: undefined,
         pickedLongitude: undefined,
         mapPickerFor: undefined,
       });
     }
-  }, [params.pickedLocationName, params.pickedLatitude, params.pickedLongitude, params.mapPickerFor]);
+  }, [params.pickedLatitude, params.pickedLongitude, params.mapPickerFor]);
 
   // Add location for non-daily
   const handleAddLocation = () => {
@@ -215,6 +216,19 @@ export default function CreateItinerary() {
 
   const canShowPlanning = !!startOn && !!endOn;
 
+  // Helper to serialize state for navigation
+  const getNavParams = () => ({
+    name,
+    startOn: startOn ? startOn.toISOString() : '',
+    endOn: endOn ? endOn.toISOString() : '',
+    planDaily: planDaily ? 'true' : 'false',
+    locations: JSON.stringify(locations),
+    dailyLocations: JSON.stringify(dailyLocations),
+    tempLocation,
+    tempNote,
+    tempLatLng: tempLatLng ? JSON.stringify(tempLatLng) : '',
+  });
+
   return (
     <ThemedView style={styles.container}>
       <KeyboardAvoidingView
@@ -288,11 +302,28 @@ export default function CreateItinerary() {
                   {locations.map((loc, idx) =>
                     editingLocIdx === idx ? (
                       <View key={idx} style={styles.locationItem}>
-                        <TextField
-                          placeholder="Location"
-                          value={editLocValue}
-                          onChangeText={setEditLocValue}
-                        />
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                          <TextField
+                            placeholder="Location"
+                            value={editLocValue}
+                            onChangeText={setEditLocValue}
+                            style={{ flex: 1 }}
+                          />
+                          <TouchableOpacity
+                            style={styles.mapBtn}
+                            onPress={() => {
+                              router.push({
+                                pathname: '/map-picker',
+                                params: {
+                                  ...getNavParams(),
+                                  mapPickerFor: `edit-${idx}`,
+                                },
+                              });
+                            }}
+                          >
+                            <Ionicons name="map" size={22} color="#205781" />
+                          </TouchableOpacity>
+                        </View>
                         <TextField
                           placeholder="Note"
                           value={editNoteValue}
@@ -327,11 +358,28 @@ export default function CreateItinerary() {
                   )}
                   {showLocationInput ? (
                     <View>
-                      <TextField
-                        placeholder="Location"
-                        value={tempLocation}
-                        onChangeText={setTempLocation}
-                      />
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <TextField
+                          placeholder="Location"
+                          value={tempLocation}
+                          onChangeText={setTempLocation}
+                          style={{ flex: 1 }}
+                        />
+                        <TouchableOpacity
+                          style={styles.mapBtn}
+                          onPress={() => {
+                            router.push({
+                              pathname: '/map-picker',
+                              params: {
+                                ...getNavParams(),
+                                mapPickerFor: 'add',
+                              },
+                            });
+                          }}
+                        >
+                          <Ionicons name="map" size={22} color="#205781" />
+                        </TouchableOpacity>
+                      </View>
                       <TextField
                         placeholder="Note"
                         value={tempNote}
@@ -384,10 +432,15 @@ export default function CreateItinerary() {
                               return updated;
                             });
                           }}
+                          dayIdx={idx}
+                          locIdx={lidx}
+                          router={router}
                         />
                       ))}
                       <DailyLocationInputToggle
                         onAdd={(location, note, lat, lng) => handleAddDailyLocation(idx, location, note, lat, lng)}
+                        dayIdx={idx}
+                        router={router}
                       />
                     </View>
                   ))}
@@ -417,12 +470,18 @@ function EditableDailyLocation({
   latitude,
   longitude,
   onSave,
+  dayIdx,
+  locIdx,
+  router,
 }: {
   location: string;
   note: string;
   latitude?: number;
   longitude?: number;
   onSave: (location: string, note: string, lat?: number, lng?: number) => void;
+  dayIdx?: number;
+  locIdx?: number;
+  router?: any;
 }) {
   const [editing, setEditing] = useState(false);
   const [editLocation, setEditLocation] = useState(location);
@@ -431,14 +490,53 @@ function EditableDailyLocation({
     latitude && longitude ? { lat: latitude, lng: longitude } : null
   );
 
+  const params = useLocalSearchParams();
+  useEffect(() => {
+    if (
+      params.pickedLatitude &&
+      params.pickedLongitude &&
+      params.mapPickerFor === `daily-edit-${dayIdx}-${locIdx}`
+    ) {
+      const lat = Number(params.pickedLatitude);
+      const lng = Number(params.pickedLongitude);
+      setEditLatLng({ lat, lng });
+      setEditLocation(`${lat}, ${lng}`);
+      if (router) {
+        router.setParams({
+          pickedLatitude: undefined,
+          pickedLongitude: undefined,
+          mapPickerFor: undefined,
+        });
+      }
+    }
+  }, [params.pickedLatitude, params.pickedLongitude, params.mapPickerFor]);
+
   if (editing) {
     return (
       <View>
-        <TextField
-          placeholder="Location"
-          value={editLocation}
-          onChangeText={setEditLocation}
-        />
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <TextField
+            placeholder="Location"
+            value={editLocation}
+            onChangeText={setEditLocation}
+            style={{ flex: 1 }}
+          />
+          <TouchableOpacity
+            style={styles.mapBtn}
+            onPress={() => {
+              if (router && dayIdx !== undefined && locIdx !== undefined) {
+                router.push({
+                  pathname: '/map-picker',
+                  params: {
+                    mapPickerFor: `daily-edit-${dayIdx}-${locIdx}`,
+                  },
+                });
+              }
+            }}
+          >
+            <Ionicons name="map" size={22} color="#205781" />
+          </TouchableOpacity>
+        </View>
         <TextField
           placeholder="Note"
           value={editNote}
@@ -484,7 +582,15 @@ function EditableDailyLocation({
   );
 }
 
-function DailyLocationInputToggle({ onAdd }: { onAdd: (location: string, note: string, lat?: number, lng?: number) => void }) {
+function DailyLocationInputToggle({
+  onAdd,
+  dayIdx,
+  router,
+}: {
+  onAdd: (location: string, note: string, lat?: number, lng?: number) => void;
+  dayIdx?: number;
+  router?: any;
+}) {
   const [showInput, setShowInput] = useState(false);
   return showInput ? (
     <DailyLocationInput
@@ -493,6 +599,8 @@ function DailyLocationInputToggle({ onAdd }: { onAdd: (location: string, note: s
         setShowInput(false);
       }}
       onCancel={() => setShowInput(false)}
+      dayIdx={dayIdx}
+      router={router}
     />
   ) : (
     <TouchableOpacity style={styles.addLocBtn} onPress={() => setShowInput(true)}>
@@ -504,21 +612,64 @@ function DailyLocationInputToggle({ onAdd }: { onAdd: (location: string, note: s
 function DailyLocationInput({
   onAdd,
   onCancel,
+  dayIdx,
+  router,
 }: {
   onAdd: (location: string, note: string, lat?: number, lng?: number) => void;
   onCancel?: () => void;
+  dayIdx?: number;
+  router?: any;
 }) {
   const [location, setLocation] = useState('');
   const [note, setNote] = useState('');
   const [latLng, setLatLng] = useState<{ lat: number; lng: number } | null>(null);
 
+  const params = useLocalSearchParams();
+  useEffect(() => {
+    if (
+      params.pickedLatitude &&
+      params.pickedLongitude &&
+      params.mapPickerFor === `daily-add-${dayIdx}`
+    ) {
+      const lat = Number(params.pickedLatitude);
+      const lng = Number(params.pickedLongitude);
+      setLatLng({ lat, lng });
+      setLocation(`${lat}, ${lng}`);
+      if (router) {
+        router.setParams({
+          pickedLatitude: undefined,
+          pickedLongitude: undefined,
+          mapPickerFor: undefined,
+        });
+      }
+    }
+  }, [params.pickedLatitude, params.pickedLongitude, params.mapPickerFor]);
+
   return (
     <View>
-      <TextField
-        placeholder="Location"
-        value={location}
-        onChangeText={setLocation}
-      />
+      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <TextField
+          placeholder="Location"
+          value={location}
+          onChangeText={setLocation}
+          style={{ flex: 1 }}
+        />
+        <TouchableOpacity
+          style={styles.mapBtn}
+          onPress={() => {
+            if (router && dayIdx !== undefined) {
+              router.push({
+                pathname: '/map-picker',
+                params: {
+                  mapPickerFor: `daily-add-${dayIdx}`,
+                },
+              });
+            }
+          }}
+        >
+          <Ionicons name="map" size={22} color="#205781" />
+        </TouchableOpacity>
+      </View>
       <TextField
         placeholder="Note"
         value={note}
@@ -614,8 +765,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   addLocBtn: {
-    backgroundColor: '#205781',
-    borderRadius: 10,
+    backgroundColor: '#cccccc',
+    opacity: 0.5,
     paddingVertical: 10,
     paddingHorizontal: 18,
     alignItems: 'center',
@@ -624,7 +775,6 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   addLocBtnText: {
-    color: '#fff',
     fontWeight: 'bold',
     fontSize: 15,
   },
