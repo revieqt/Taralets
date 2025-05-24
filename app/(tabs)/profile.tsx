@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, Image, Modal, Alert, Platform, KeyboardAvoidingView, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { getAuth, signOut, EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'firebase/auth';
 import { router } from 'expo-router';
-import { getFirestore, doc, getDoc, updateDoc } from 'firebase/firestore';
+import { getFirestore, doc, updateDoc } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -12,8 +12,10 @@ import PasswordField from '@/components/PasswordField';
 import OutlineButton from '@/components/OutlineButton';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
+import { useSession } from '@/context/SessionContext';
 
 const Profile = () => {
+  const { session, updateSession, clearSession } = useSession();
   const [userInfo, setUserInfo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
@@ -31,30 +33,18 @@ const Profile = () => {
   const firestore = getFirestore();
   const storage = getStorage();
 
+  // Use session user data instead of fetching from Firestore
   useEffect(() => {
-    const fetchUserData = async () => {
-      const user = auth.currentUser;
-      if (user) {
-        try {
-          const userRef = doc(firestore, 'users', user.uid);
-          const userDoc = await getDoc(userRef);
-          if (userDoc.exists()) {
-            const data = userDoc.data();
-            setUserInfo(data);
-            if (data.profileImage) {
-              setProfileImageUrl(data.profileImage);
-            }
-          }
-        } catch (error) {
-          console.error('Error fetching user data: ', error);
-        } finally {
-          setLoading(false);
-        }
+    if (session?.user) {
+      setUserInfo(session.user);
+      if (session.user.profileImage) {
+        setProfileImageUrl(session.user.profileImage);
       }
-    };
-
-    fetchUserData();
-  }, [auth.currentUser]);
+      setLoading(false);
+    } else {
+      setLoading(false);
+    }
+  }, [session?.user]);
 
   // Handle profile image change
   const handleProfileImagePress = async () => {
@@ -95,7 +85,7 @@ const Profile = () => {
     );
   };
 
-  // Upload image and update Firestore
+  // Upload image and update Firestore and session
   const uploadProfileImage = async (uri: string) => {
     try {
       setUploading(true);
@@ -118,6 +108,21 @@ const Profile = () => {
       await updateDoc(userRef, { profileImage: downloadURL });
 
       setProfileImageUrl(downloadURL);
+
+      // Update session user profileImage
+      if (session?.user) {
+        await updateSession({
+          user: {
+            ...session.user,
+            profileImage: downloadURL,
+          }
+        });
+        setUserInfo({
+          ...session.user,
+          profileImage: downloadURL,
+        });
+      }
+
       Alert.alert('Success', 'Profile photo updated!');
     } catch (error) {
       Alert.alert('Error', 'Failed to update profile photo.');
@@ -130,6 +135,7 @@ const Profile = () => {
   const handleLogout = () => {
     signOut(auth)
       .then(() => {
+        clearSession();
         router.replace('/login');
       })
       .catch((error) => {
@@ -267,7 +273,7 @@ const Profile = () => {
               Status: {userInfo.status}
             </ThemedText>
             <ThemedText style={styles.collapsibleChild}>
-              Created: {userInfo.createdOn?.toDate().toLocaleString()}
+              Created: {userInfo.createdOn instanceof Date ? userInfo.createdOn.toLocaleString() : ''}
             </ThemedText>
           </Collapsible>
 

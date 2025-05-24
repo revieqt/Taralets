@@ -10,13 +10,15 @@ import { getFirestore, collection, addDoc, serverTimestamp } from 'firebase/fire
 import * as Location from 'expo-location';
 import TextField from '@/components/TextField';
 import { Ionicons } from '@expo/vector-icons';
-import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
+import { GooglePlacesAutocomplete, GooglePlaceData } from 'react-native-google-places-autocomplete';
+import { useSession } from '@/context/SessionContext';
+import userLocation from '@/utils/userLocationAddress'; // <-- Make sure this exists
 
 const GOOGLE_MAPS_APIKEY = 'AIzaSyDI_dL8xl7gnjcPps-CXgDJM9DtF3oZPVI';
 
 export default function CreateRouteScreen() {
   const [region, setRegion] = useState<Region | null>(null);
-  const [userLocation, setUserLocation] = useState<LatLng | null>(null);
+  const [userLocationState, setUserLocation] = useState<LatLng | null>(null);
   const [start, setStart] = useState<LatLng | null>(null);
   const [end, setEnd] = useState<LatLng | null>(null);
   const [waypoints, setWaypoints] = useState<LatLng[]>([]);
@@ -33,6 +35,9 @@ export default function CreateRouteScreen() {
   const [editingStopIdx, setEditingStopIdx] = useState<number | null>(null);
 
   const mapRef = useRef<MapView>(null);
+
+  // Session context
+  const { session, updateSession } = useSession();
 
   // Get user's current location on mount
   useEffect(() => {
@@ -105,7 +110,18 @@ export default function CreateRouteScreen() {
     }
   };
 
-  // Save to Firestore
+  // Helper to get location name using Nominatim or your utility
+  const getLocationName = async (lat: number, lng: number) => {
+    try {
+      const street = await userLocation.street(lat, lng);
+      const city = await userLocation.city(lat, lng);
+      return `${street}, ${city}`;
+    } catch {
+      return '';
+    }
+  };
+
+  // Save to Firestore and session
   const saveRoute = async (status: 'forLater' | 'active') => {
     const auth = getAuth();
     const user = auth.currentUser;
@@ -117,21 +133,48 @@ export default function CreateRouteScreen() {
       Alert.alert('Error', 'Please select both start and end points.');
       return;
     }
+    // Prevent starting a route if there is already an activeRoute in session
+    if (status === 'active' && session?.activeRoute) {
+      Alert.alert('You already have an active route. Please finish it before starting a new one.');
+      return;
+    }
     const db = getFirestore();
     const locationArr = [
       start,
       ...waypoints,
       end,
     ];
+
+    // Fetch location names for all points
+    const locationsWithNames = await Promise.all(
+      locationArr.map(async (loc, idx) => ({
+        ...loc,
+        locationName:
+          (idx === 0 && startAddress) ||
+          (idx === locationArr.length - 1 && endAddress) ||
+          waypointAddresses[idx - 1] ||
+          (await getLocationName(loc.latitude, loc.longitude)),
+      }))
+    );
+
     try {
-      await addDoc(collection(db, 'routes'), {
+      const docRef = await addDoc(collection(db, 'routes'), {
         createdOn: serverTimestamp(),
-        location: locationArr,
+        location: locationsWithNames,
         userID: user.uid,
         status: status,
       });
       Alert.alert('Success', status === 'forLater' ? 'Route saved for later!' : 'Route started!');
       if (status === 'active') {
+        // Save to session as activeRoute
+        await updateSession({
+          activeRoute: {
+            userID: user.uid,
+            location: locationsWithNames,
+            status: 'active',
+            createdOn: new Date(), // serverTimestamp is not available immediately
+          }
+        });
         router.replace('/(tabs)/home');
       } else {
         router.back();
@@ -147,9 +190,9 @@ export default function CreateRouteScreen() {
     type: 'start' | 'end' | 'waypoint',
     idx?: number
   ) => {
-    if (details === 'your_location' && userLocation) {
+    if (details === 'your_location' && userLocationState) {
       if (type === 'start') {
-        setStart(userLocation);
+        setStart(userLocationState);
         setStartAddress('Your Location');
         setEditingStopIdx(null);
       }
@@ -192,8 +235,23 @@ export default function CreateRouteScreen() {
     setEditingStopIdx(null);
   };
 
-  // Custom renderRow for "Your Location"
-  const renderRowWithYourLocation = (rowData: any) => {
+  // Fix for GooglePlacesAutocomplete predefinedPlaces type
+  const predefinedPlaces = userLocationState
+    ? [
+        {
+          description: 'Your Location',
+          geometry: {
+            location: {
+              latitude: userLocationState.latitude,
+              longitude: userLocationState.longitude,
+            },
+          },
+        },
+      ]
+    : [];
+
+  // Fix for renderRow type
+  const renderRowWithYourLocation = (rowData: GooglePlaceData, index: number) => {
     if (typeof rowData === 'object' && rowData.description === 'Your Location') {
       return (
         <View style={{ flexDirection: 'row', alignItems: 'center', padding: 10 }}>
@@ -202,7 +260,12 @@ export default function CreateRouteScreen() {
         </View>
       );
     }
-    return null;
+    // fallback to default rendering
+    return (
+      <View style={{ flexDirection: 'row', alignItems: 'center', padding: 10 }}>
+        <ThemedText>{rowData.description}</ThemedText>
+      </View>
+    );
   };
 
   return (
@@ -216,7 +279,7 @@ export default function CreateRouteScreen() {
                 placeholder="Set Starting Location"
                 fetchDetails
                 onPress={(data, details = null) => {
-                  if (data?.description === 'Your Location' && userLocation) {
+                  if (data?.description === 'Your Location' && userLocationState) {
                     handlePlaceSelect('your_location', 'start');
                   } else if (details) {
                     handlePlaceSelect(details, 'start');
@@ -238,31 +301,14 @@ export default function CreateRouteScreen() {
                 onNotFound={() => {}}
                 textInputProps={{
                   value: startAddress,
-                  onChangeText: setStartAddress,
+                  onChangeText: (text: string) => setStartAddress(text),
                   autoCorrect: false,
                   autoCapitalize: 'none',
                 }}
-                predefinedPlaces={
-                  userLocation
-                    ? [
-                        {
-                          description: 'Your Location',
-                          geometry: {
-                            location: {
-                              lat: userLocation.latitude,
-                              lng: userLocation.longitude,
-                            },
-                          },
-                        },
-                      ]
-                    : []
-                }
+                predefinedPlaces={predefinedPlaces as any}
                 renderRow={renderRowWithYourLocation}
-                filterReverseGeocoding={false}
+                filterReverseGeocodingByTypes={[]}
                 minLength={0}
-                onChangeText={text => {
-                  setStartAddress(text);
-                }}
               />
             </View>
             <TouchableOpacity
@@ -303,7 +349,7 @@ export default function CreateRouteScreen() {
                 onNotFound={() => {}}
                 textInputProps={{
                   value: endAddress,
-                  onChangeText: setEndAddress,
+                  onChangeText: (text: string) => setEndAddress(text),
                   autoCorrect: false,
                   autoCapitalize: 'none',
                 }}
@@ -354,7 +400,7 @@ export default function CreateRouteScreen() {
                   placeholder="Starting Location"
                   fetchDetails
                   onPress={(data, details = null) => {
-                    if (data?.description === 'Your Location' && userLocation) {
+                    if (data?.description === 'Your Location' && userLocationState) {
                       handlePlaceSelect('your_location', 'start');
                     } else if (details) handlePlaceSelect(details, 'start');
                   }}
@@ -372,31 +418,14 @@ export default function CreateRouteScreen() {
                   debounce={200}
                   textInputProps={{
                     value: startAddress,
-                    onChangeText: setStartAddress,
+                    onChangeText: (text: string) => setStartAddress(text),
                     autoCorrect: false,
                     autoCapitalize: 'none',
                   }}
-                  predefinedPlaces={
-                    userLocation
-                      ? [
-                          {
-                            description: 'Your Location',
-                            geometry: {
-                              location: {
-                                lat: userLocation.latitude,
-                                lng: userLocation.longitude,
-                              },
-                            },
-                          },
-                        ]
-                      : []
-                  }
+                  predefinedPlaces={predefinedPlaces as any}
                   renderRow={renderRowWithYourLocation}
-                  filterReverseGeocoding={false}
+                  filterReverseGeocodingByTypes={[]}
                   minLength={0}
-                  onChangeText={text => {
-                    setStartAddress(text);
-                  }}
                 />
               </View>
             ) : (
@@ -444,7 +473,7 @@ export default function CreateRouteScreen() {
                   debounce={200}
                   textInputProps={{
                     value: endAddress,
-                    onChangeText: setEndAddress,
+                    onChangeText: (text: string) => setEndAddress(text),
                     autoCorrect: false,
                     autoCapitalize: 'none',
                   }}
@@ -496,7 +525,7 @@ export default function CreateRouteScreen() {
                     debounce={200}
                     textInputProps={{
                       value: waypointAddresses[idx] || '',
-                      onChangeText: text => {
+                      onChangeText: (text: string) => {
                         const arr = [...waypointAddresses];
                         arr[idx] = text;
                         setWaypointAddresses(arr);
@@ -596,9 +625,9 @@ export default function CreateRouteScreen() {
             <TouchableOpacity
               style={[
                 styles.startBtn,
-                (!start || !end) && { backgroundColor: '#cccccc' }
+                (!start || !end || !!session?.activeRoute) && { backgroundColor: '#cccccc' }
               ]}
-              disabled={!start || !end}
+              disabled={!start || !end || !!session?.activeRoute}
               onPress={() => saveRoute('active')}
             >
               <ThemedText style={styles.startBtnText}>Start Route</ThemedText>

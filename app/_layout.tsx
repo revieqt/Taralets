@@ -9,6 +9,9 @@ import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 
+// Import your SessionProvider here
+import { SessionProvider } from '@/context/SessionContext';
+
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
@@ -29,23 +32,25 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="routes/routes" options={{ headerShown: false }} />
-        <Stack.Screen name="routes/create" options={{ headerShown: false }} />
-        <Stack.Screen name="itineraries/itineraries" options={{ headerShown: false}} />
-        <Stack.Screen name="itineraries/create" options={{ headerShown: false}} />
-        <Stack.Screen name="weather" options={{ headerShown: false}} />
-        <Stack.Screen name="tourGuideApplication" options={{ headerShown: false }} />
-        <Stack.Screen name="login" options={{ headerShown: false }} />
-        <Stack.Screen name="register" options={{ headerShown: false }} />
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="map-picker" options={{ headerShown: false }} />
-
-        <Stack.Screen name="+not-found" options={{ headerShown: false }}/>
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <SessionProvider>
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <Stack>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="routes/routes" options={{ headerShown: false }} />
+          <Stack.Screen name="routes/create" options={{ headerShown: false }} />
+          <Stack.Screen name="routes/[id]" options={{ headerShown: false }} />
+          <Stack.Screen name="itineraries/itineraries" options={{ headerShown: false}} />
+          <Stack.Screen name="itineraries/create" options={{ headerShown: false}} />
+          <Stack.Screen name="weather" options={{ headerShown: false}} />
+          <Stack.Screen name="tourGuideApplication" options={{ headerShown: false }} />
+          <Stack.Screen name="login" options={{ headerShown: false }} />
+          <Stack.Screen name="register" options={{ headerShown: false }} />
+          <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen name="map-picker" options={{ headerShown: false }} />
+          <Stack.Screen name="+not-found" options={{ headerShown: false }}/>
+        </Stack>
+        <StatusBar style="auto" />
+      </ThemeProvider>
+    </SessionProvider>
   );
 }

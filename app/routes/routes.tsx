@@ -3,10 +3,11 @@ import { StyleSheet, Platform, TouchableOpacity, FlatList, View } from 'react-na
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import { router } from "expo-router";
 import { db } from '../../auth/firebaseConfig';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { getAuth } from "firebase/auth";
+import { router } from "expo-router";
+import RouteView from '@/components/modals/RouteView';
 
 function formatDate(date: any) {
   if (!date) return '';
@@ -25,6 +26,10 @@ export default function RoutesScreen() {
   const [pendingRoutes, setPendingRoutes] = useState<any[]>([]);
   const [archivedRoutes, setArchivedRoutes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Modal state for overlay
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchRoutes = async () => {
@@ -59,6 +64,17 @@ export default function RoutesScreen() {
           }
         });
 
+        // Sort pending so that active routes are first
+        pending.sort((a, b) => {
+          if ((a.status === 'active' || a.status === 'Active') && (b.status !== 'active' && b.status !== 'Active')) {
+            return -1;
+          }
+          if ((b.status === 'active' || b.status === 'Active') && (a.status !== 'active' && a.status !== 'Active')) {
+            return 1;
+          }
+          return 0;
+        });
+
         setPendingRoutes(pending);
         setArchivedRoutes(archive);
       } catch (e) {
@@ -70,18 +86,38 @@ export default function RoutesScreen() {
     fetchRoutes();
   }, []);
 
-  const renderItem = ({ item }: { item: any }) => (
-    <View style={styles.item}>
-      <View>
-        <ThemedText style={styles.itemName}>{item.name || 'Route'}</ThemedText>
-        <ThemedText style={styles.itemDates}>
-          {/* If you want to display dates, you can extract from item.location or createdOn */}
-          {item.createdOn && item.createdOn.toDate ? item.createdOn.toDate().toLocaleDateString() : ''}
-        </ThemedText>
-      </View>
-      <ThemedText style={styles.itemStatus}>{item.status}</ThemedText>
-    </View>
-  );
+  // Show overlay modal and pass route id to RouteView component
+  const handleRoutePress = (route: any) => {
+    setSelectedRouteId(route.id);
+    setModalVisible(true);
+  };
+
+  // Helper to get start and end location names
+  const getStartEndNames = (locationArr: any[]) => {
+    if (!Array.isArray(locationArr) || locationArr.length === 0) return { start: '', end: '' };
+    const start = locationArr[0]?.locationName || '';
+    const end = locationArr[locationArr.length - 1]?.locationName || '';
+    return { start, end };
+  };
+
+  const renderItem = ({ item }: { item: any }) => {
+    const { start, end } = getStartEndNames(item.location);
+    return (
+      <TouchableOpacity onPress={() => handleRoutePress(item)}>
+        <View style={styles.item}>
+          <View>
+            <ThemedText style={styles.itemName}>
+              {start && end ? `${start} → ${end}` : 'Route'}
+            </ThemedText>
+            <ThemedText style={styles.itemDates}>
+              {item.createdOn && item.createdOn.toDate ? item.createdOn.toDate().toLocaleDateString() : ''}
+            </ThemedText>
+          </View>
+          <ThemedText style={styles.itemStatus}>{item.status}</ThemedText>
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <ThemedView style={styles.container}>
@@ -157,6 +193,13 @@ export default function RoutesScreen() {
       <TouchableOpacity style={styles.addButton} onPress={() => router.push("/routes/create")}>
         <IconSymbol size={30} name="plus" color={"white"} />
       </TouchableOpacity>
+
+      {/* Overlay Modal for Route Description using RouteView component */}
+      <RouteView
+        id={selectedRouteId ?? ''}
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+      />
     </ThemedView>
   );
 }

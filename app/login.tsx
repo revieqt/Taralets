@@ -10,6 +10,8 @@ import TextField from '@/components/TextField';
 import PasswordField from '@/components/PasswordField';
 import OutlineButton from '@/components/OutlineButton';
 import GradientButton from '@/components/GradientButton';
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
+import { useSession } from '@/context/SessionContext';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -17,31 +19,69 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
+  const { updateSession } = useSession();
 
   const handleLogin = async () => {
-    setErrorMsg('');
-    setLoading(true);
-    if (!email || !password) {
-      setErrorMsg('Please enter both email and password.');
+  setErrorMsg('');
+  setLoading(true);
+  if (!email || !password) {
+    setErrorMsg('Please enter both email and password.');
+    setLoading(false);
+    return;
+  }
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const db = getFirestore();
+    const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
+    if (!userDoc.exists()) {
+      setErrorMsg('User profile not found. Please contact support.');
       setLoading(false);
       return;
     }
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      router.replace('/');
-    } catch (error: any) {
-      if (error.code === 'auth/user-not-found') {
-        setErrorMsg('No account found with this email.');
-      } else if (error.code === 'auth/wrong-password') {
-        setErrorMsg('Incorrect password.');
-      } else if (error.code === 'auth/invalid-email') {
-        setErrorMsg('Invalid email address.');
-      } else {
-        setErrorMsg('Login failed. Please check your credentials.');
-      }
+    const userData = userDoc.data();
+
+    const requiredFields = [
+      'fname', 'lname', 'username', 'email', 'bdate', 'age', 'gender',
+      'contactNumber', 'profileImage', 'status', 'type', 'createdOn'
+    ];
+    const missing = requiredFields.filter(field => userData[field] === undefined || userData[field] === null);
+    if (missing.length > 0) {
+      setErrorMsg('User profile is incomplete. Missing: ' + missing.join(', '));
+      setLoading(false);
+      return;
     }
-    setLoading(false);
-  };
+
+    const userForSession = {
+      fname: userData.fname,
+      mname: userData.mname,
+      lname: userData.lname,
+      username: userData.username,
+      email: email,
+      bdate: userData.bdate?.toDate ? userData.bdate.toDate() : userData.bdate,
+      age: userData.age,
+      gender: userData.gender,
+      contactNumber: userData.contactNumber,
+      profileImage: userData.profileImage,
+      status: userData.status,
+      type: userData.type,
+      createdOn: userData.createdOn?.toDate ? userData.createdOn.toDate() : userData.createdOn,
+    };
+
+    await updateSession({ user: userForSession });
+    router.replace('/');
+  } catch (error: any) {
+    if (error.code === 'auth/user-not-found') {
+      setErrorMsg('No account found with this email.');
+    } else if (error.code === 'auth/wrong-password') {
+      setErrorMsg('Incorrect password.');
+    } else if (error.code === 'auth/invalid-email') {
+      setErrorMsg('Invalid email address.');
+    } else {
+      setErrorMsg('Login failed. Please check your credentials.');
+    }
+  }
+  setLoading(false);
+};
 
   return (
     <ThemedView style={styles.background}>
