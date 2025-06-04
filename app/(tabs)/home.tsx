@@ -2,6 +2,7 @@ import { StyleSheet, View, TouchableOpacity, Image } from 'react-native';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { useRouter } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
+import { ThemedView } from '@/components/ThemedView';
 import VerticalRule from '@/components/VerticalRule';
 import { Octicons, MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import MapView, { Marker, Polyline } from 'react-native-maps';
@@ -206,32 +207,49 @@ export default function HomeScreen() {
   };
 
   return (
-    <ParallaxScrollView header={mapHeader}>
-      <View style={styles.menuContainer}>
-        <TouchableOpacity onPress={() => router.push('/routes/routes')} style={styles.menuButton}>
-          <MaterialIcons name="route" size={24} color="black" />
-          <ThemedText>Routes</ThemedText>
-        </TouchableOpacity>
-
-        <View style={styles.verticalRule}>
-          <VerticalRule height="50%" color="#aaa" thickness={1} />
+    <ThemedView style={{ flex: 1, padding: 16 }}>
+      <ThemedView style={styles.header}>
+        <View>
+          <ThemedText type='defaultSemiBold'>Welcome </ThemedText>
+          <ThemedText>Welcome to TaraG!</ThemedText>
         </View>
 
-        <TouchableOpacity onPress={() => router.push('/itineraries/itineraries')} style={styles.menuButton}>
-          <Octicons name="paper-airplane" size={24} color="black" />
-          <ThemedText>Itineraries</ThemedText>
+        <TouchableOpacity style={styles.notificationButton}>
+          <MaterialIcons name="notifications-none" size={24} color="black" />
         </TouchableOpacity>
+      </ThemedView>
+      
+      <ParallaxScrollView header={mapHeader}>
+        <View style={styles.menuContainer}>
+          <TouchableOpacity onPress={() => router.push('/routes/routes')} style={styles.menuButton}>
+            <MaterialIcons name="route" size={24} color="black" />
+            <ThemedText>Routes</ThemedText>
+          </TouchableOpacity>
 
-        <View style={styles.verticalRule}>
-          <VerticalRule height="50%" color="#aaa" thickness={1} />
+          <View style={styles.verticalRule}>s
+            <VerticalRule height="50%" color="#aaa" thickness={1} />
+          </View>
+
+          <TouchableOpacity onPress={() => router.push('/itineraries/itineraries')} style={styles.menuButton}>
+            <Octicons name="paper-airplane" size={24} color="black" />
+            <ThemedText>Itineraries</ThemedText>
+          </TouchableOpacity>
+
+          <View style={styles.verticalRule}>
+            <VerticalRule height="50%" color="#aaa" thickness={1} />
+          </View>
+
+          <TouchableOpacity onPress={() => router.push('/weather')} style={styles.menuButton}>
+            <MaterialCommunityIcons name="weather-sunset" size={24} color="black" />
+            <ThemedText>Weather</ThemedText>
+          </TouchableOpacity>
         </View>
 
-        <TouchableOpacity onPress={() => router.push('/weather')} style={styles.menuButton}>
-          <MaterialCommunityIcons name="weather-sunset" size={24} color="black" />
-          <ThemedText>Weather</ThemedText>
-        </TouchableOpacity>
-      </View>
-    </ParallaxScrollView>
+        <View style={{width:'100%', height: 500, backgroundColor: 'red'}}></View>
+      </ParallaxScrollView>
+
+    </ThemedView>
+    
   );
 }
 
@@ -259,4 +277,21 @@ const styles = StyleSheet.create({
   verticalRule: {
     alignSelf: 'center',
   },
+  header: {
+    width: '100%',
+    height: 80,
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+    paddingTop: 16,
+  },
+  notificationButton: {
+    width: 80,
+    height: 80,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 20,
+    backgroundColor: '#f0f0f0',
+  }
 });

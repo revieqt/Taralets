@@ -6,10 +6,17 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 export type ThemedViewProps = ViewProps & {
   lightColor?: string;
   darkColor?: string;
+  type?: 'primary' | 'secondary' | 'accent';
 };
 
-export function ThemedView({ style, lightColor, darkColor, ...otherProps }: ThemedViewProps) {
-  const backgroundColor = useThemeColor({ light: lightColor, dark: darkColor }, 'background');
+export function ThemedView({ style, lightColor, darkColor, type, ...otherProps }: ThemedViewProps) {
+  // Determine which color to use based on the "type" prop
+  let colorKey: 'background' | 'primary' | 'secondary' | 'accent' = 'background';
+  if (type === 'primary') colorKey = 'primary';
+  else if (type === 'secondary') colorKey = 'secondary';
+  else if (type === 'accent') colorKey = 'accent';
+
+  const backgroundColor = useThemeColor({ light: lightColor, dark: darkColor }, colorKey);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {

@@ -26,7 +26,7 @@ const TextField: React.FC<TextFieldProps> = ({
   style,
 }) => {
   // Use themed colors
-  const backgroundColor = useThemeColor({}, 'background');
+  const backgroundColor = useThemeColor({}, 'primary');
   const textColor = useThemeColor({}, 'text');
   const borderColor = useThemeColor({}, 'tint');
 

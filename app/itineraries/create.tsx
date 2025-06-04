@@ -4,7 +4,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import TextField from '@/components/TextField';
 import DatePicker from '@/components/DatePicker';
-import { IconSymbol } from '@/components/ui/IconSymbol';
+import AntDesign from '@expo/vector-icons/AntDesign';
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { db } from '../../auth/firebaseConfig';
 import { collection, addDoc, Timestamp } from 'firebase/firestore';
@@ -249,7 +249,7 @@ export default function CreateItinerary() {
                 alignItems: "center",
               }}
             >
-              <IconSymbol size={24} name="left" color={"#cccccc"} />
+              <AntDesign size={24} name="left" color={"#cccccc"} />
             </TouchableOpacity>
             <ThemedText type='subtitle'>Create New Itinerary</ThemedText>
           </ThemedView>

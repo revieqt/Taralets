@@ -1,31 +1,41 @@
-import { StyleSheet, Image, Platform } from 'react-native';
-
-import { Collapsible } from '@/components/Collapsible';
-import { ExternalLink } from '@/components/ExternalLink';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
+import { StyleSheet, Image, Platform, TouchableOpacity } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { IconSymbol } from '@/components/ui/IconSymbol';
+import { FontAwesome6 } from '@expo/vector-icons';
+import SOSButton from '@/components/SOSButton';
 
 export default function EmergencyScreen() {
   return (
-    <ParallaxScrollView>
-      <ThemedView>
-        <ThemedText>Emergency</ThemedText>
+    <ThemedView style={Platform.OS === 'ios' ? {padding: 16, paddingTop: 0, alignItems:'center'} : {padding: 16, paddingTop: 25 ,alignItems:'center'}}>
+      <ThemedView type='secondary' style={styles.mapContainer}>
+        {/* map chuchu diri */}
       </ThemedView>
-    </ParallaxScrollView>
+      <SOSButton style={styles.emergencyButton}>
+        <FontAwesome6 name='exclamation' size={50} color='#ccc' />
+      </SOSButton>
+      <ThemedText type='subtitle'>
+        Click to be on Emergency State!
+      </ThemedText>
+      <ThemedText>
+        You are currently in
+      </ThemedText>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+  mapContainer: {
+    width: '100%',
+    height: 250,
+    borderRadius: 16,
   },
-  titleContainer: {
-    flexDirection: 'row',
-    gap: 8,
+  emergencyButton: {
+    width: 120,
+    height: 120,
+    borderRadius: 100,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: -60,
+    marginBottom: 10,
   },
 });

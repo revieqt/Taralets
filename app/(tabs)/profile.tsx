@@ -277,10 +277,16 @@ const Profile = () => {
             </ThemedText>
           </Collapsible>
 
+          
+
+          <Collapsible title="Privacy and Security">
+            <TouchableOpacity onPress={() => setModalVisible(true)}>
+              <ThemedText style={styles.collapsibleChild}>Change Password</ThemedText>
+            </TouchableOpacity>
+          </Collapsible>
+
           <Collapsible title="Tour Guide Settings">
-
           {userInfo.type === 'tourGuide' ? 
-
             <View>
               <TouchableOpacity onPress={() => router.push('/tourGuideApplication')}>
                 <ThemedText style={styles.collapsibleChild}>View Tour Guide Information</ThemedText>
@@ -290,19 +296,23 @@ const Profile = () => {
                 <ThemedText style={styles.collapsibleChild}>Manage Tours</ThemedText>
               </TouchableOpacity>
             </View>
-            
             :
-
             <TouchableOpacity onPress={() => router.push('/tourGuideApplication')}>
               <ThemedText style={styles.collapsibleChild}>Apply as Tour Guide</ThemedText>
             </TouchableOpacity>
           }
-            
           </Collapsible>
 
-          <Collapsible title="Privacy and Security">
-            <TouchableOpacity onPress={() => setModalVisible(true)}>
-              <ThemedText style={styles.collapsibleChild}>Change Password</ThemedText>
+          {/* UNFINISHED AREA */}
+          <Collapsible title="Help and Support">
+            <TouchableOpacity>
+              <ThemedText style={styles.collapsibleChild}>App Manual</ThemedText>
+            </TouchableOpacity>
+            <TouchableOpacity>
+              <ThemedText style={styles.collapsibleChild}>Terms and Conditions</ThemedText>
+            </TouchableOpacity>
+            <TouchableOpacity>
+              <ThemedText style={styles.collapsibleChild}>Contact Support</ThemedText>
             </TouchableOpacity>
           </Collapsible>
         </ThemedView>

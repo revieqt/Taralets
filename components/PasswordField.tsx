@@ -20,7 +20,7 @@ const PasswordField: React.FC<PasswordFieldProps> = ({
   onBlur,
   isFocused: isFocusedProp,
 }) => {
-  const backgroundColor = useThemeColor({}, 'background');
+  const backgroundColor = useThemeColor({}, 'primary');
   const textColor = useThemeColor({}, 'text');
   const borderColor = useThemeColor({}, 'tint');
 

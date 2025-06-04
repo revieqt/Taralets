@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, Platform, TouchableOpacity, FlatList, View } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { IconSymbol } from '@/components/ui/IconSymbol';
+import AntDesign from '@expo/vector-icons/AntDesign';
 import { db } from '../../auth/firebaseConfig';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { getAuth } from "firebase/auth";
@@ -130,7 +130,7 @@ export default function RoutesScreen() {
             alignItems: "center",
           }}
         >
-          <IconSymbol size={24} name="left" color={"#cccccc"} />
+          <AntDesign size={24} name="left" color={"#cccccc"} />
         </TouchableOpacity>
         <ThemedText type='subtitle'>Routes</ThemedText>
       </ThemedView>
@@ -191,7 +191,7 @@ export default function RoutesScreen() {
       </ThemedView>
       
       <TouchableOpacity style={styles.addButton} onPress={() => router.push("/routes/create")}>
-        <IconSymbol size={30} name="plus" color={"white"} />
+        <AntDesign size={30} name="plus" color={"white"} />
       </TouchableOpacity>
 
       {/* Overlay Modal for Route Description using RouteView component */}

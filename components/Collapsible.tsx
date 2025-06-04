@@ -9,10 +9,9 @@ import {
   UIManager,
   View,
 } from 'react-native';
-
+import AntDesign from '@expo/vector-icons/AntDesign';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
@@ -49,7 +48,7 @@ export function Collapsible({ children, title }: PropsWithChildren & { title: st
         style={styles.heading}
         onPress={() => setIsOpen((value) => !value)}
         activeOpacity={0.8}>
-        <IconSymbol
+        <AntDesign
           name="right"
           size={18}
           color={theme === 'light' ? Colors.light.icon : Colors.dark.icon}
