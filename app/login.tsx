@@ -5,10 +5,8 @@ import { ThemedView } from '@/components/ThemedView';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../auth/firebaseConfig';
 import { router } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
 import TextField from '@/components/TextField';
 import PasswordField from '@/components/PasswordField';
-import OutlineButton from '@/components/OutlineButton';
 import GradientButton from '@/components/GradientButton';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import { useSession } from '@/context/SessionContext';
@@ -89,55 +87,59 @@ export default function LoginScreen() {
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <Image
-          source={require('../assets/images/tara.png')}
-          style={styles.mascot}
-          resizeMode="contain"
-        />
-        <ThemedText type="title" style={styles.title}>
-          Welcome to TaraG!
-        </ThemedText>
-        <ThemedText style={styles.subtitle}>
-          Login to effectively plan your next travels!
-        </ThemedText>
+        <ThemedView style={styles.formContainer}>
+          <ThemedText type='title'>Smart Plans,</ThemedText>
+          <ThemedText style={{marginBottom: 30}}>Safer Journeys. Join TaraG!</ThemedText>
 
-        {errorMsg ? (
+          {errorMsg ? (
           <ThemedText style={styles.errorMsg}>{errorMsg}</ThemedText>
-        ) : null}
+          ) : null}
 
-        <TextField
-          placeholder="Email"
-          value={email}
-          onChangeText={setEmail}
-          onFocus={() => setFocusedInput('email')}
-          onBlur={() => setFocusedInput(null)}
-          isFocused={focusedInput === 'email'}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
+          <TextField
+            placeholder="Email"
+            value={email}
+            onChangeText={setEmail}
+            onFocus={() => setFocusedInput('email')}
+            onBlur={() => setFocusedInput(null)}
+            isFocused={focusedInput === 'email'}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
 
-        <PasswordField
-          placeholder="Password"
-          value={password}
-          onChangeText={setPassword}
-          onFocus={() => setFocusedInput('password')}
-          onBlur={() => setFocusedInput(null)}
-          isFocused={focusedInput === 'password'}
-        />
+          <PasswordField
+            placeholder="Password"
+            value={password}
+            onChangeText={setPassword}
+            onFocus={() => setFocusedInput('password')}
+            onBlur={() => setFocusedInput(null)}
+            isFocused={focusedInput === 'password'}
+          />
 
-        <GradientButton
-          title={loading ? 'Logging in...' : 'Login'}
-          onPress={handleLogin}
-          gradientColors={['#205781', '#7AB2D3']}
-        />
+          <GradientButton
+            title={loading ? 'Logging in...' : 'Login'}
+            onPress={handleLogin}
+            gradientColors={['#00FFDE', '#0065F8']}
+          />
 
-        <ThemedText style={{padding:20}}>----- or -----</ThemedText>
+          <View style={styles.options}>
+            <ThemedText>or</ThemedText>
+              <TouchableOpacity
+                onPress={() => router.push('/register')}>
+                <ThemedView style={styles.circularButton}>
+                  <Image
+                    source={require('../assets/icons/google.png')}
+                    style={{ width: 30, height: 30 }}
+                  />
+                </ThemedView>
+              </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => router.push('/register')} style={styles.registerLink}>
-          <ThemedText style={styles.registerText}>
-            Don't have an account? <ThemedText style={{ textDecorationLine: 'underline' }}>Register</ThemedText>
-          </ThemedText>
-        </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => router.push('/register')}
+                style={{ marginVertical: 20 }}>
+                <ThemedText>Dont have an account yet? Register</ThemedText>
+              </TouchableOpacity>
+            </View>
+        </ThemedView>
       </KeyboardAvoidingView>
     </ThemedView>
   );
@@ -152,57 +154,32 @@ const styles = StyleSheet.create({
   },
   container: {
     width: '100%',
-    maxWidth: 380,
-    alignItems: 'center',
   },
-  mascot: {
-    width: 100,
-    height: 100,
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 6,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 15,
-    marginBottom: 28,
-    textAlign: 'center',
+  formContainer: {
+    marginTop: 150,
   },
   errorMsg: {
-    color: '#d32f2f',
-    backgroundColor: '#fdecea',
-    borderRadius: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    marginBottom: 14,
+    color: 'red',
+    marginBottom: 10,
     textAlign: 'center',
-    fontSize: 15,
   },
-  button: {
-    paddingVertical: 15,
-    borderRadius: 25,
+  options: {
     alignItems: 'center',
-    shadowColor: '#007bff',
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
+    marginTop: 17,
   },
-  buttonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 17,
-    letterSpacing: 0.5,
-  },
-  registerLink: {
-    marginTop: 10,
-    alignItems: 'center',
-  },
-  registerText: {
-    color: '#007bff',
-    fontSize: 15,
-  },
+  circularButton: {
+  width: 60,
+  height: 60,
+  marginTop: 10,
+  marginBottom: 50,
+  borderRadius: 30,
+  justifyContent: 'center',
+  alignItems: 'center',
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.25,
+  shadowRadius: 3.84,
+  elevation: 5,
+},
+  
 });
