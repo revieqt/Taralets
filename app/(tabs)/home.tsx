@@ -1,210 +1,23 @@
 import { StyleSheet, View, TouchableOpacity, Image } from 'react-native';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { useRouter } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import VerticalRule from '@/components/VerticalRule';
-import { Octicons, MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Octicons, MaterialIcons, MaterialCommunityIcons, FontAwesome6 } from '@expo/vector-icons';
 import MapView, { Marker, Polyline } from 'react-native-maps';
 import { useEffect, useRef, useState } from 'react';
 import { getUserLocation } from '@/services/mapService';
 import { getFirestore, collection, query, where, getDocs } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
-import { decode as decodePolyline } from '@mapbox/polyline';
+// import { decode as decodePolyline } from '@mapbox/polyline';
 import { useSession } from '@/context/SessionContext';
 const GOOGLE_MAPS_APIKEY = 'AIzaSyDI_dL8xl7gnjcPps-CXgDJM9DtF3oZPVI';
 
 export default function HomeScreen() {
   const router = useRouter();
   const { session } = useSession();
-  const [userCoords, setUserCoords] = useState<{ latitude: number; longitude: number } | null>(null);
-  const [activeRoute, setActiveRoute] = useState<any>(null);
-  const [routePolyline, setRoutePolyline] = useState<{ latitude: number; longitude: number }[]>([]);
-  const [region, setRegion] = useState<any>(null);
-  const mapRef = useRef<MapView>(null);
 
-  // Use profileImage from session user
-  const profileImage = session?.user?.profileImage || null;
-
-  // Only set region on first load or when userCoords changes for the first time
-  useEffect(() => {
-    let initialized = false;
-    const fetchLocation = async () => {
-      const loc = await getUserLocation();
-      if (loc) {
-        setUserCoords(loc);
-        if (!initialized) {
-          setRegion({
-            latitude: loc.latitude,
-            longitude: loc.longitude,
-            latitudeDelta: 0.01,
-            longitudeDelta: 0.01,
-          });
-          initialized = true;
-        }
-      }
-    };
-    fetchLocation();
-    const interval = setInterval(fetchLocation, 5000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Use activeRoute from session if available, else fetch from Firestore
-  useEffect(() => {
-    if (session?.activeRoute) {
-      setActiveRoute(session.activeRoute);
-    } else {
-      const fetchActiveRoute = async () => {
-        const auth = getAuth();
-        const user = auth.currentUser;
-        if (!user) return;
-        const db = getFirestore();
-        const q = query(
-          collection(db, 'routes'),
-          where('userID', '==', user.uid),
-          where('status', '==', 'active')
-        );
-        const snap = await getDocs(q);
-        if (!snap.empty) {
-          const route = snap.docs[0].data();
-          setActiveRoute(route);
-        } else {
-          setActiveRoute(null);
-          setRoutePolyline([]);
-        }
-      };
-      fetchActiveRoute();
-    }
-  }, [session?.activeRoute]);
-
-  // Polyline: connect user to route points using Google Directions API
-  useEffect(() => {
-    const fetchPolyline = async () => {
-      if (
-        userCoords &&
-        activeRoute &&
-        Array.isArray(activeRoute.location) &&
-        activeRoute.location.length > 0
-      ) {
-        // Build waypoints string for Directions API
-        const waypoints = activeRoute.location
-          .slice(1, activeRoute.location.length - 1)
-          .map((pt: any) => `${pt.latitude},${pt.longitude}`)
-          .join('|');
-
-        const origin = `${userCoords.latitude},${userCoords.longitude}`;
-        const destination = `${activeRoute.location[activeRoute.location.length - 1].latitude},${activeRoute.location[activeRoute.location.length - 1].longitude}`;
-
-        let url = `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${destination}&key=${GOOGLE_MAPS_APIKEY}`;
-        if (waypoints) {
-          url += `&waypoints=${waypoints}`;
-        }
-
-        try {
-          const res = await fetch(url);
-          const json = await res.json();
-          if (json.routes && json.routes.length > 0) {
-            const points = decodePolyline(json.routes[0].overview_polyline.points);
-            const coords = points.map(([latitude, longitude]: [number, number]) => ({
-              latitude,
-              longitude,
-            }));
-            setRoutePolyline(coords);
-            // Fit map to route
-            if (mapRef.current && coords.length > 0) {
-              mapRef.current.fitToCoordinates(coords, {
-                edgePadding: { top: 50, bottom: 200, left: 50, right: 50 },
-                animated: true,
-              });
-            }
-          } else {
-            setRoutePolyline([userCoords, ...activeRoute.location]);
-          }
-        } catch (e) {
-          setRoutePolyline([userCoords, ...activeRoute.location]);
-        }
-      } else {
-        setRoutePolyline([]);
-      }
-    };
-    fetchPolyline();
-    // Only rerun when userCoords or activeRoute.location changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userCoords, activeRoute?.location]);
-
-  const mapHeader = (height: number) => {
-    if (activeRoute && routePolyline.length > 1 && userCoords) {
-      return (
-        <View style={{ flex: 1, width: '100%', height, borderRadius: 16, overflow: 'hidden' }}>
-          <MapView
-            ref={mapRef}
-            style={StyleSheet.absoluteFill}
-            region={region}
-            onRegionChangeComplete={setRegion}
-            showsUserLocation={false}
-            followsUserLocation={false}
-            scrollEnabled={true}
-            zoomEnabled={true}
-          >
-            {/* Polyline: user -> route points */}
-            <Polyline
-              coordinates={routePolyline}
-              strokeWidth={4}
-              strokeColor="#205781"
-            />
-            {/* Route markers */}
-            {activeRoute.location.map((point: any, idx: number) => (
-              <Marker key={idx} coordinate={point} />
-            ))}
-            {/* User marker with profile image from session */}
-            {userCoords && (
-              <Marker coordinate={userCoords}>
-                {profileImage ? (
-                  <Image
-                    source={{ uri: profileImage }}
-                    style={{ width: 40, height: 40, borderRadius: 20, borderWidth: 2, borderColor: '#205781' }}
-                  />
-                ) : (
-                  <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: '#205781', alignItems: 'center', justifyContent: 'center' }}>
-                    <MaterialIcons name="person" size={24} color="#fff" />
-                  </View>
-                )}
-              </Marker>
-            )}
-          </MapView>
-        </View>
-      );
-    } else if (userCoords) {
-      return (
-        <View style={{ flex: 1, width: '100%', height, borderRadius: 16, overflow: 'hidden' }}>
-          <MapView
-            style={StyleSheet.absoluteFill}
-            region={region}
-            onRegionChangeComplete={setRegion}
-          >
-            <Marker coordinate={userCoords}>
-              {profileImage ? (
-                <Image
-                  source={{ uri: profileImage }}
-                  style={{ width: 40, height: 40, borderRadius: 20, borderWidth: 2, borderColor: '#205781' }}
-                />
-              ) : (
-                <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: '#205781', alignItems: 'center', justifyContent: 'center' }}>
-                  <MaterialIcons name="person" size={24} color="#fff" />
-                </View>
-              )}
-            </Marker>
-          </MapView>
-        </View>
-      );
-    } else {
-      return (
-        <View style={[styles.map, { height, justifyContent: 'center', alignItems: 'center' }]}>
-          <ThemedText>Loading map...</ThemedText>
-        </View>
-      );
-    }
-  };
+  
 
   return (
     <ThemedView style={{ flex: 1, padding: 16 }}>
@@ -215,18 +28,37 @@ export default function HomeScreen() {
         </View>
 
         <TouchableOpacity style={styles.notificationButton}>
-          <MaterialIcons name="notifications-none" size={24} color="black" />
+            <MaterialIcons name="notifications-none" size={24} color="black" />
         </TouchableOpacity>
       </ThemedView>
+
+      <View style={styles.mapContainer}>
+        <ThemedView type='secondary' style={styles.expandButton}>
+          <TouchableOpacity onPress={() => router.push('/map-view')}>
+            <FontAwesome6 name="expand" size={20} color="black" />
+          </TouchableOpacity>
+        </ThemedView>
+      </View>
+
+      <ThemedView type='primary' style={styles.locationShadow}>
+        <ThemedView type='primary' style={styles.locationContainer}>
+          <ThemedText>
+            You are currently in
+          </ThemedText>
+          <ThemedText type='subtitle'>
+            San Pedro Rd, Minglanilla
+          </ThemedText>
+        </ThemedView>
+      </ThemedView>
       
-      <ParallaxScrollView header={mapHeader}>
+      <View>
         <View style={styles.menuContainer}>
           <TouchableOpacity onPress={() => router.push('/routes/routes')} style={styles.menuButton}>
             <MaterialIcons name="route" size={24} color="black" />
             <ThemedText>Routes</ThemedText>
           </TouchableOpacity>
 
-          <View style={styles.verticalRule}>s
+          <View style={styles.verticalRule}>
             <VerticalRule height="50%" color="#aaa" thickness={1} />
           </View>
 
@@ -244,9 +76,7 @@ export default function HomeScreen() {
             <ThemedText>Weather</ThemedText>
           </TouchableOpacity>
         </View>
-
-        <View style={{width:'100%', height: 500, backgroundColor: 'red'}}></View>
-      </ParallaxScrollView>
+      </View>
 
     </ThemedView>
     
@@ -254,10 +84,31 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  map: {
+  mapContainer: {
     width: '100%',
-    borderRadius: 16,
-    overflow: 'hidden',
+    height: 250,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 10,
+  },
+  locationShadow: {
+    width: '90%',
+    height: 40,
+    marginTop: -50,
+    alignSelf: 'center',
+    borderTopLeftRadius: 15,
+    borderTopRightRadius: 15,
+    overflow: 'visible',
+    marginBottom: 55,
+    elevation: 10,
+  },
+  locationContainer:{
+    width: '100%',
+    height:  90,
+    borderTopLeftRadius: 15,
+    borderTopRightRadius: 15,
+    padding: 14,
+    alignItems: 'center',
   },
   menuContainer: {
     width: '100%',
@@ -285,13 +136,25 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 16,
     paddingTop: 16,
+    borderBottomColor: '#ccc',
+    borderBottomWidth: 1,
   },
   notificationButton: {
-    width: 80,
-    height: 80,
+    width: 60,
+    height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 20,
-    backgroundColor: '#f0f0f0',
+  },
+  expandButton: {
+    width: 50,
+    height: 50,
+    position: 'absolute',
+    right: 10,
+    top: 10,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 5,
   }
 });

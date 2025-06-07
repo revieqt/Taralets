@@ -3,10 +3,10 @@ import { StyleSheet, Image, Platform } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 
-export default function GroupScreen() {
+export default function MapView() {
   return (
     <ThemedView>
-      <ThemedText>Groups</ThemedText>
+      <ThemedText>Map View</ThemedText>
     </ThemedView>
   );
 }

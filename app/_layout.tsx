@@ -46,6 +46,7 @@ export default function RootLayout() {
           <Stack.Screen name="register" options={{ headerShown: false }} />
           <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="map-picker" options={{ headerShown: false }} />
+          <Stack.Screen name="map-view" options={{ headerShown: false }} />
           <Stack.Screen name="+not-found" options={{ headerShown: false }}/>
         </Stack>
         <StatusBar style="auto" />
