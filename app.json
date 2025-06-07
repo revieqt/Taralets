@@ -9,14 +9,22 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": false,
+      "config": {
+        "googleMapsApiKey": "AIzaSyDI_dL8xl7gnjcPps-CXgDJM9DtF3oZPVI"
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.anonymous.Taralets"
+      "package": "com.anonymous.Taralets",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyDI_dL8xl7gnjcPps-CXgDJM9DtF3oZPVI"
+        }
+      }
     },
     "web": {
       "bundler": "metro",
@@ -29,7 +37,8 @@
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
+          "imageWidth": "100%",
+          
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }

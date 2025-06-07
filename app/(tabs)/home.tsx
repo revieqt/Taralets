@@ -2,7 +2,9 @@ import { StyleSheet, View, TouchableOpacity, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import TaraMap from '@/components/TaraMap';
 import VerticalRule from '@/components/VerticalRule';
+import NotificationModal from '@/components/modals/NotificationModal';
 import { Octicons, MaterialIcons, MaterialCommunityIcons, FontAwesome6 } from '@expo/vector-icons';
 import MapView, { Marker, Polyline } from 'react-native-maps';
 import { useEffect, useRef, useState } from 'react';
@@ -16,20 +18,20 @@ const GOOGLE_MAPS_APIKEY = 'AIzaSyDI_dL8xl7gnjcPps-CXgDJM9DtF3oZPVI';
 export default function HomeScreen() {
   const router = useRouter();
   const { session } = useSession();
-
+  const [notifVisible, setNotifVisible] = useState(false);
   
 
   return (
     <ThemedView style={{ flex: 1, padding: 16 }}>
       <ThemedView style={styles.header}>
-        <View>
-          <ThemedText type='defaultSemiBold'>Welcome </ThemedText>
-          <ThemedText>Welcome to TaraG!</ThemedText>
-        </View>
+        <Image
+          source={require('@/assets/images/logo-complete.png')}
+          style={{ width: 120, height: 50, marginTop: 5}}></Image>
 
-        <TouchableOpacity style={styles.notificationButton}>
-            <MaterialIcons name="notifications-none" size={24} color="black" />
+        <TouchableOpacity style={styles.notificationButton} onPress={() => setNotifVisible(true)}>
+          <MaterialIcons name="notifications-none" size={24} color="black" />
         </TouchableOpacity>
+        <NotificationModal visible={notifVisible} onClose={() => setNotifVisible(false)} />
       </ThemedView>
 
       <View style={styles.mapContainer}>
@@ -38,10 +40,20 @@ export default function HomeScreen() {
             <FontAwesome6 name="expand" size={20} color="black" />
           </TouchableOpacity>
         </ThemedView>
+
+        <TaraMap
+          region={{
+            latitude: 14.5995,
+            longitude: 120.9842,
+            latitudeDelta: 0.05,
+            longitudeDelta: 0.05,
+          }}
+        />
       </View>
 
       <ThemedView type='primary' style={styles.locationShadow}>
         <ThemedView type='primary' style={styles.locationContainer}>
+          
           <ThemedText>
             You are currently in
           </ThemedText>
@@ -90,16 +102,17 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderWidth: 1,
     borderRadius: 10,
+    overflow: 'hidden',
   },
   locationShadow: {
     width: '90%',
-    height: 40,
+    height: 60,
     marginTop: -50,
     alignSelf: 'center',
     borderTopLeftRadius: 15,
     borderTopRightRadius: 15,
     overflow: 'visible',
-    marginBottom: 55,
+    marginBottom: 30,
     elevation: 10,
   },
   locationContainer:{
@@ -156,5 +169,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 5,
+    zIndex: 10,
   }
 });
