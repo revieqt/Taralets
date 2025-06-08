@@ -18,7 +18,7 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [loaded] = useFonts({
-    Roboto: require('../assets/fonts/OpenSans-VariableFont_wdth,wght.ttf'),
+    OpenSans: require('../assets/fonts/OpenSans-VariableFont_wdth,wght.ttf'),
   });
 
   useEffect(() => {

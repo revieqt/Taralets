@@ -476,8 +476,11 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
   },
   collapsibleChild: {
-    padding: 4,
+    padding: 5,
     fontSize: 15,
+    width: '100%',
+    borderColor: '#ccc',
+    borderWidth: 1,
   },
   logoutContainer: {
     margin:15,

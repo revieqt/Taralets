@@ -117,31 +117,24 @@ export default function RegisterScreen() {
   return (
     <ThemedView style={styles.background}>
 
-      
-      <LinearGradient
-        colors={['#205781', '#7AB2D3']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={styles.header}
-      >
-        <ThemedText type="subtitle" style={styles.headerTitle}>
-          Create an Account
-        </ThemedText>
-        <ThemedText style={styles.headerSubtitle}>
-          Fill up the form and join our growing community!
-        </ThemedText>
-      </LinearGradient>
-
       <KeyboardAvoidingView
-        style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={{ flex: 1, width: '100%' }}
       >
         <ScrollView
           ref={scrollRef}
-          style={{ width: '100%' }}
-          contentContainerStyle={{ alignItems: 'center', paddingBottom: 30 }}
+          style={{ width: '100%', padding: 20 }}
+          contentContainerStyle={{ paddingBottom: 30 }}
           keyboardShouldPersistTaps="handled"
         >
+
+          <ThemedText type="title" style={{ marginTop: 50}}>
+            Create an Account
+          </ThemedText>
+          <ThemedText style={{ marginBottom: 20}}>
+            Fill up the form and join our growing community!
+          </ThemedText>
+
           {errorMsg ? (
             <ThemedText style={styles.errorMsg}>{errorMsg}</ThemedText>
           ) : null}
@@ -216,6 +209,7 @@ export default function RegisterScreen() {
           <GradientButton
             title={loading ? 'Registering...' : 'Register'}
             onPress={handleRegister}
+            gradientColors={['#00FFDE', '#0065F8']}
           />
 
           <TouchableOpacity onPress={() => router.push('/login')} style={styles.registerLink}>
@@ -232,29 +226,6 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   background: {
     flex: 1,
-  },
-  header: {
-    width: '100%',
-    height: 160,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    paddingHorizontal: 20,
-    paddingTop: 65,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  headerSubtitle: {
-    fontSize: 15,
-    color: '#f1f3f6',
-    marginTop: 3,
-  },
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    padding: 20,
   },
   errorMsg: {
     color: '#d32f2f',

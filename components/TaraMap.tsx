@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE, Region } from 'react-native-maps';
 
 type TaraMapProps = {
@@ -16,53 +16,133 @@ const TaraMap: React.FC<TaraMapProps> = ({
   markerDescription = 'Current Location',
 }) => {
   return (
-      <MapView
-        style={styles.map}
-        provider={PROVIDER_GOOGLE}
-        initialRegion={region}
-        customMapStyle={mapStyle}
-      >
-      </MapView>
+    <MapView
+      style={styles.map}
+      provider={PROVIDER_GOOGLE}
+      initialRegion={region}
+      customMapStyle={mapStyle}
+    >
+      {showMarker && (
+        <Marker
+          coordinate={{
+            latitude: region.latitude,
+            longitude: region.longitude,
+          }}
+          title={markerTitle}
+          description={markerDescription}
+        />
+      )}
+    </MapView>
   );
 };
 
 export default TaraMap;
 
-// 🧭 Custom modern map styling (light gray theme)
+// Custom map style: only colors and geometry, all labels are kept
 const mapStyle = [
-  {
-    elementType: 'geometry',
-    stylers: [{ color: '#ebe3cd' }],
-  },
-  {
-    elementType: 'labels.text.fill',
-    stylers: [{ color: '#523735' }],
-  },
-  {
-    elementType: 'labels.text.stroke',
-    stylers: [{ color: '#f5f1e6' }],
-  },
-  {
-    featureType: 'administrative',
-    elementType: 'geometry.stroke',
-    stylers: [{ color: '#c9b2a6' }],
-  },
-  {
-    featureType: 'road',
-    elementType: 'geometry',
-    stylers: [{ color: '#f5f1e6' }],
-  },
-  {
-    featureType: 'road.highway',
-    elementType: 'geometry',
-    stylers: [{ color: '#f8c967' }],
-  },
-  {
-    featureType: 'water',
-    elementType: 'geometry.fill',
-    stylers: [{ color: '#b9d3c2' }],
-  },
-];
+    {
+        "featureType": "landscape",
+        "stylers": [
+            {
+                "hue": "#FFBB00"
+            },
+            {
+                "saturation": 43.400000000000006
+            },
+            {
+                "lightness": 37.599999999999994
+            },
+            {
+                "gamma": 1
+            }
+        ]
+    },
+    {
+        "featureType": "road.highway",
+        "stylers": [
+            {
+                "hue": "#FFC200"
+            },
+            {
+                "saturation": -61.8
+            },
+            {
+                "lightness": 45.599999999999994
+            },
+            {
+                "gamma": 1
+            }
+        ]
+    },
+    {
+        "featureType": "road.arterial",
+        "stylers": [
+            {
+                "hue": "#FF0300"
+            },
+            {
+                "saturation": -100
+            },
+            {
+                "lightness": 51.19999999999999
+            },
+            {
+                "gamma": 1
+            }
+        ]
+    },
+    {
+        "featureType": "road.local",
+        "stylers": [
+            {
+                "hue": "#FF0300"
+            },
+            {
+                "saturation": -100
+            },
+            {
+                "lightness": 52
+            },
+            {
+                "gamma": 1
+            }
+        ]
+    },
+    {
+        "featureType": "water",
+        "stylers": [
+            {
+                "hue": "#0078FF"
+            },
+            {
+                "saturation": -13.200000000000003
+            },
+            {
+                "lightness": 2.4000000000000057
+            },
+            {
+                "gamma": 1
+            }
+        ]
+    },
+    {
+        "featureType": "poi",
+        "stylers": [
+            {
+                "hue": "#00FF6A"
+            },
+            {
+                "saturation": -1.0989010989011234
+            },
+            {
+                "lightness": 11.200000000000017
+            },
+            {
+                "gamma": 1
+            }
+        ]
+    }
+]
 
 const styles = StyleSheet.create({
   map: {

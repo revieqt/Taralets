@@ -1,4 +1,4 @@
-import { StyleSheet, View, TouchableOpacity, Image } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Image, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -6,118 +6,233 @@ import TaraMap from '@/components/TaraMap';
 import VerticalRule from '@/components/VerticalRule';
 import NotificationModal from '@/components/modals/NotificationModal';
 import { Octicons, MaterialIcons, MaterialCommunityIcons, FontAwesome6 } from '@expo/vector-icons';
-import MapView, { Marker, Polyline } from 'react-native-maps';
-import { useEffect, useRef, useState } from 'react';
-import { getUserLocation } from '@/services/mapService';
-import { getFirestore, collection, query, where, getDocs } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
-// import { decode as decodePolyline } from '@mapbox/polyline';
+import { useState } from 'react';
 import { useSession } from '@/context/SessionContext';
-const GOOGLE_MAPS_APIKEY = 'AIzaSyDI_dL8xl7gnjcPps-CXgDJM9DtF3oZPVI';
+import { useReverseGeocoding } from '@/hooks/useReverseGeocoding';
+import useUserLocation from '@/hooks/useUserLocation';
+import { usePlaceInformation } from '@/hooks/usePlaceInformation';
+import { Portal, Modal, PaperProvider } from 'react-native-paper';
+import OutlineButton from '@/components/OutlineButton';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function HomeScreen() {
   const router = useRouter();
   const { session } = useSession();
   const [notifVisible, setNotifVisible] = useState(false);
-  
+  const { userCoordinates, errorMessage } = useUserLocation();
+  const locationName = useReverseGeocoding(userCoordinates.lat, userCoordinates.lon);
+
+  const town = locationName.split(',').pop()?.trim() || '';
+  const { info: wikiInfo, image: wikiImage, loading: wikiLoading } = usePlaceInformation(town);
+
+  const [infoModalVisible, setInfoModalVisible] = useState(false);
+  const INFO_PREVIEW_LENGTH = 220;
+  const isLongInfo = wikiInfo && wikiInfo.length > INFO_PREVIEW_LENGTH;
+  const infoPreview = isLongInfo ? wikiInfo?.slice(0, INFO_PREVIEW_LENGTH) + '...' : wikiInfo;
 
   return (
-    <ThemedView style={{ flex: 1, padding: 16 }}>
-      <ThemedView style={styles.header}>
-        <Image
-          source={require('@/assets/images/logo-complete.png')}
-          style={{ width: 120, height: 50, marginTop: 5}}></Image>
+    <PaperProvider>
+      <ThemedView style={{ flex: 1, padding: 20 }}>
+        
+        <LinearGradient
+          colors={[
+            'rgb(0,101,248)',   // Top: solid blue
+            'rgb(0,255,222)',   // Middle: solid teal
+            'rgb(255,255,255)',   // Middle: solid teal
+          ]}
+          locations={[0,0.66,1]}
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 350,
 
-        <TouchableOpacity style={styles.notificationButton} onPress={() => setNotifVisible(true)}>
-          <MaterialIcons name="notifications-none" size={24} color="black" />
-        </TouchableOpacity>
-        <NotificationModal visible={notifVisible} onClose={() => setNotifVisible(false)} />
-      </ThemedView>
-
-      <View style={styles.mapContainer}>
-        <ThemedView type='secondary' style={styles.expandButton}>
-          <TouchableOpacity onPress={() => router.push('/map-view')}>
-            <FontAwesome6 name="expand" size={20} color="black" />
-          </TouchableOpacity>
-        </ThemedView>
-
-        <TaraMap
-          region={{
-            latitude: 14.5995,
-            longitude: 120.9842,
-            latitudeDelta: 0.05,
-            longitudeDelta: 0.05,
+            zIndex: -100,
           }}
         />
-      </View>
-
-      <ThemedView type='primary' style={styles.locationShadow}>
-        <ThemedView type='primary' style={styles.locationContainer}>
+        <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
+        <View style={styles.header}>
+          <View>
+            <ThemedText type='subtitle' style={{ color: 'white', fontSize: 17, marginTop: 5 }}>
+              Hello {session?.user?.fname} {session?.user?.lname}!
+            </ThemedText>
+            <ThemedText style={{ color: 'white', fontSize: 14 }}>
+              Welcome to TaraG
+            </ThemedText>
+          </View>
           
-          <ThemedText>
-            You are currently in
-          </ThemedText>
-          <ThemedText type='subtitle'>
-            San Pedro Rd, Minglanilla
-          </ThemedText>
+          <TouchableOpacity style={styles.notificationButton} onPress={() => setNotifVisible(true)}>
+            <MaterialIcons name="notifications-none" size={24} color="white" />
+          </TouchableOpacity>
+          <NotificationModal visible={notifVisible} onClose={() => setNotifVisible(false)} />
+        </View>
+
+        <View style={styles.mapContainer}>
+            <ThemedView type='secondary' style={styles.expandButton}>
+              <TouchableOpacity onPress={() => router.push('/map-view')}>
+                <FontAwesome6 name="expand" size={20} color="#ccc" />
+              </TouchableOpacity>
+            </ThemedView>
+
+            <TaraMap
+              region={{
+                latitude: userCoordinates.lat || 14.5995,
+                longitude: userCoordinates.lon || 120.9842,
+                latitudeDelta: 0.05,
+                longitudeDelta: 0.05,
+              }}
+            />
+        </View>
+        
+
+        <ThemedView type='primary' style={styles.locationShadow}>
+          <ThemedView type='primary' style={styles.locationContainer}>
+            <ThemedText>
+              You are currently in
+            </ThemedText>
+            <ThemedText type='subtitle'>
+              {errorMessage ? errorMessage : locationName}
+            </ThemedText>
+          </ThemedView>
         </ThemedView>
-      </ThemedView>
-      
-      <View>
-        <View style={styles.menuContainer}>
-          <TouchableOpacity onPress={() => router.push('/routes/routes')} style={styles.menuButton}>
-            <MaterialIcons name="route" size={24} color="black" />
-            <ThemedText>Routes</ThemedText>
-          </TouchableOpacity>
 
-          <View style={styles.verticalRule}>
-            <VerticalRule height="50%" color="#aaa" thickness={1} />
+          
+        <View>
+          <View style={styles.menuContainer}>
+            <TouchableOpacity onPress={() => router.push('/routes/routes')} style={styles.menuButton}>
+              <MaterialIcons name="route" size={24} color="black" />
+              <ThemedText>Routes</ThemedText>
+            </TouchableOpacity>
+
+            <View style={styles.verticalRule}>
+              <VerticalRule height="50%" color="#aaa" thickness={1} />
+            </View>
+
+            <TouchableOpacity onPress={() => router.push('/itineraries/itineraries')} style={styles.menuButton}>
+              <Octicons name="paper-airplane" size={24} color="black" />
+              <ThemedText>Itineraries</ThemedText>
+            </TouchableOpacity>
+
+            <View style={styles.verticalRule}>
+              <VerticalRule height="50%" color="#aaa" thickness={1} />
+            </View>
+
+            <TouchableOpacity onPress={() => router.push('/weather')} style={styles.menuButton}>
+              <MaterialCommunityIcons name="weather-sunset" size={24} color="black" />
+              <ThemedText>Weather</ThemedText>
+            </TouchableOpacity>
           </View>
+        </View>
 
-          <TouchableOpacity onPress={() => router.push('/itineraries/itineraries')} style={styles.menuButton}>
-            <Octicons name="paper-airplane" size={24} color="black" />
-            <ThemedText>Itineraries</ThemedText>
-          </TouchableOpacity>
-
-          <View style={styles.verticalRule}>
-            <VerticalRule height="50%" color="#aaa" thickness={1} />
-          </View>
-
-          <TouchableOpacity onPress={() => router.push('/weather')} style={styles.menuButton}>
-            <MaterialCommunityIcons name="weather-sunset" size={24} color="black" />
-            <ThemedText>Weather</ThemedText>
-          </TouchableOpacity>
+        <View style={styles.infoContainer}>
+          {wikiImage && (
+            <Image
+              source={{ uri: wikiImage }}
+              style={StyleSheet.absoluteFill}
+              resizeMode="cover"
+              blurRadius={2}
+            />
+          )}
+          <LinearGradient
+          colors={[
+        'rgba(0,0,0,0.5)',    // Top: transparent black
+        'rgba(128,128,128,0.4)', // Middle: semi-transparent gray
+            'rgba(255,255,255,1)', // Bottom: solid white
+            
+            
+          ]}
+          locations={[0, 0.66, 1]}
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 1,
+          }}
+        />
+        <ThemedText type="subtitle" style={{ marginBottom: 8, fontWeight: 'bold', zIndex: 2, color: '#00CAFF' }}>
+          {town}
+        </ThemedText>
+        <View style={{ maxHeight: 100, overflow: 'hidden', marginBottom: 4, zIndex: 2 }}>
+          <ThemedText style={{color: 'white' }}>
+            {wikiLoading
+              ? 'Loading information...'
+              : infoPreview
+            }
+          </ThemedText>
+        </View>
+        <View style={{ flexDirection: 'row', marginTop: 8, justifyContent: 'flex-start', gap: 8, zIndex: 2 }}>
+          <OutlineButton
+            title="Search for Tours"
+            onPress={() => {}}
+            buttonStyle={{ height: 40, paddingHorizontal: 18, minWidth: 0, width: 'auto', backgroundColor: 'rgba(255,255,255,.7)' }}
+            textStyle={{ fontSize: 14 }}
+          />
+          {isLongInfo && (
+            <OutlineButton
+              title="See More"
+              onPress={() => setInfoModalVisible(true)}
+              buttonStyle={{ height: 40, paddingHorizontal: 18, minWidth: 0, width: 'auto',  backgroundColor: 'rgba(255,255,255,.7)'}}
+              textStyle={{ fontSize: 14 }}
+            />
+          )}
         </View>
       </View>
 
-    </ThemedView>
-    
+        <Portal>
+          <Modal
+            visible={infoModalVisible}
+            onDismiss={() => setInfoModalVisible(false)}
+            contentContainerStyle={{
+              backgroundColor: 'white',
+              margin: 24,
+              borderRadius: 12,
+              padding: 20,
+              maxHeight: '80%',
+            }}
+          >
+            <ThemedText type="subtitle" style={{ marginBottom: 8, fontWeight: 'bold', textAlign: 'center' }}>
+              {town}
+            </ThemedText>
+            <ThemedText style={{ textAlign: 'center' }}>
+              {wikiInfo}
+            </ThemedText>
+            <TouchableOpacity onPress={() => setInfoModalVisible(false)} style={{ marginTop: 16 }}>
+              <ThemedText style={{ color: '#007aff', textAlign: 'center' }}>Close</ThemedText>
+            </TouchableOpacity>
+          </Modal>
+        </Portal>
+        </ScrollView>
+      </ThemedView>
+    </PaperProvider>
   );
 }
 
 const styles = StyleSheet.create({
   mapContainer: {
     width: '100%',
-    height: 250,
+    height: 238,
     borderColor: '#ccc',
     borderWidth: 1,
     borderRadius: 10,
     overflow: 'hidden',
   },
   locationShadow: {
-    width: '90%',
-    height: 60,
+    width: '88%',
+    height: 70,
     marginTop: -50,
     alignSelf: 'center',
     borderTopLeftRadius: 15,
     borderTopRightRadius: 15,
     overflow: 'visible',
-    marginBottom: 30,
+    marginBottom: 20,
     elevation: 10,
   },
-  locationContainer:{
+  locationContainer: {
     width: '100%',
-    height:  90,
+    height: 90,
     borderTopLeftRadius: 15,
     borderTopRightRadius: 15,
     padding: 14,
@@ -132,7 +247,7 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   menuButton: {
-    width: '28%',
+    width: '26%',
     justifyContent: 'center',
     textAlign: 'center',
     alignItems: 'center',
@@ -147,13 +262,12 @@ const styles = StyleSheet.create({
     display: 'flex',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 16,
-    paddingTop: 16,
-    borderBottomColor: '#ccc',
-    borderBottomWidth: 1,
+    marginBottom: 10,
+    paddingTop: 20,
   },
   notificationButton: {
-    width: 60,
+    width: 40
+    ,
     height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
@@ -170,5 +284,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     elevation: 5,
     zIndex: 10,
-  }
+    backgroundColor: 'rgba(0,0,0,0.3)',
+  },
+  infoContainer: {
+    width: '100%',
+    backgroundColor: '#f8f8f8',
+    borderRadius: 10,
+    padding: 16,
+    marginTop: 16,
+    overflow: 'hidden',
+    height: 210,
+    elevation: 10,
+  },
 });
