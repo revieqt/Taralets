@@ -4,8 +4,8 @@ import { TouchableOpacity, Text, StyleSheet, ViewStyle, TextStyle } from 'react-
 interface OutlineButtonProps {
   title: string;
   onPress: () => void;
-  buttonStyle?: ViewStyle;
-  textStyle?: TextStyle;
+  buttonStyle?: ViewStyle| ViewStyle[];
+  textStyle?: TextStyle| TextStyle[];
 }
 
 const OutlineButton: React.FC<OutlineButtonProps> = ({
@@ -26,8 +26,8 @@ const OutlineButton: React.FC<OutlineButtonProps> = ({
 
 const styles = StyleSheet.create({
   button: {
-    width: '100%', // Hardcoded width
-    height: 50, // Hardcoded height
+    paddingVertical: 8,
+    paddingHorizontal: 15,
     borderWidth: 2,
     borderColor: '#205781',
     backgroundColor: 'transparent',
@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
   text: {
     color: '#205781',
     fontWeight: 'bold',
-    fontSize: 16,
+    fontSize: 14,
     textAlign: 'center',
   },
 });
