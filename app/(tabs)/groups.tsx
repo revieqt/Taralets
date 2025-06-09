@@ -4,15 +4,20 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import TabChooser from '@/components/TabChooser';
 import { MaterialIcons } from '@expo/vector-icons';
-import JoinGroupModal from '@/components/modals/JoinGroupModal';
+import JoinGroupModal from '../groups/JoinGroupModal';
+import { useRouter } from 'expo-router';
+import { useSession } from '@/context/SessionContext';
+import { getGroupById } from '@/services/firestore/groupDbService';
 
 export default function GroupScreen() {
   const [activeTab, setActiveTab] = useState(0);
+  const router = useRouter();
   const [fabOpen, setFabOpen] = useState(false);
   const [joinModalVisible, setJoinModalVisible] = useState(false);
-
-  // Animation for the small FAB
+  const [userGroups, setUserGroups] = useState<any[]>([]);
+  const [loadingGroups, setLoadingGroups] = useState(false);
   const smallFabAnim = useRef(new Animated.Value(0)).current;
+  const { session } = useSession();
 
   useEffect(() => {
     if (fabOpen) {
@@ -29,6 +34,23 @@ export default function GroupScreen() {
       }).start();
     }
   }, [fabOpen]);
+
+  useEffect(() => {
+  if (activeTab !== 1) return;
+  setLoadingGroups(true);
+  console.log('session.user.groups:', session?.user?.groups); // <-- Add this line
+  try {
+    const groupIds = session?.user?.groups || [];
+    const groupPromises = groupIds.map((id) => getGroupById(id));
+    Promise.all(groupPromises)
+      .then((groups) => setUserGroups(groups.filter(Boolean)))
+      .catch(() => setUserGroups([]))
+      .finally(() => setLoadingGroups(false));
+  } catch (e) {
+    setUserGroups([]);
+    setLoadingGroups(false);
+  }
+}, [activeTab, session?.user?.groups]);
 
   // The vertical distance the small FAB will travel up
   const SMALL_FAB_DISTANCE = 70;
@@ -57,17 +79,22 @@ export default function GroupScreen() {
 
         {activeTab === 1 && (
           <>
-            <ThemedText type='defaultSemiBold' style={{ marginTop: 10 }}>
-              Your Groups
-            </ThemedText>
-            <View style={styles.recommendedContainer}>
-              {/* Your Groups content goes here */}
-            </View>
+              {loadingGroups ? (
+                <ThemedText>Loading...</ThemedText>
+              ) : userGroups.length === 0 ? (
+                <ThemedText>No groups found. {session?.user?.groups}</ThemedText>
+              ) : (
+                userGroups.map((group, idx) => (
+                  <ThemedView key={group?.inviteCode || idx} style={styles.groupItem}>
+                    <ThemedText type="default">{group?.name || 'Unnamed Group'}</ThemedText>
+                    <ThemedText type="default" style={{ fontSize: 12, color: '#888' }}>
+                      Invite Code: {group?.inviteCode}
+                    </ThemedText>
+                  </ThemedView>
+                ))
+              )}
           </>
         )}
-
-        <View style={styles.searchContainer}>
-        </View>
       </ScrollView>
 
       {/* Floating Action Button and Modal */}
@@ -108,9 +135,12 @@ export default function GroupScreen() {
               </TouchableOpacity>
             </Animated.View>
             {/* Main FAB */}
-            <View style={styles.fabRow}>
+            <View style={styles.fabRow}>11
               <Text style={styles.fabLabel}>Create Group</Text>
-              <TouchableOpacity style={styles.fabMain} disabled>
+              <TouchableOpacity style={styles.fabMain} onPress={() => {
+                    setFabOpen(false);
+                    router.push('/groups/create');
+                  }}> 
                 <MaterialIcons name="add" size={32} color="#fff" />
               </TouchableOpacity>
             </View>
@@ -227,5 +257,15 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     overflow: 'hidden',
     fontWeight: 'bold',
+  },
+  groupItem: {
+    padding: 16,
+    marginVertical: 8,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
 });

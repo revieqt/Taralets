@@ -50,6 +50,7 @@ export default function LoginScreen() {
     }
 
     const userForSession = {
+      id: userCredential.user.uid,
       fname: userData.fname,
       mname: userData.mname,
       lname: userData.lname,
@@ -63,6 +64,7 @@ export default function LoginScreen() {
       status: userData.status,
       type: userData.type,
       createdOn: userData.createdOn?.toDate ? userData.createdOn.toDate() : userData.createdOn,
+      groups: userData.groups || [], 
     };
 
     await updateSession({ user: userForSession });

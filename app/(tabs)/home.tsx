@@ -5,7 +5,7 @@ import { ThemedView } from '@/components/ThemedView';
 import TaraMap from '@/components/TaraMap';
 import VerticalRule from '@/components/VerticalRule';
 import NotificationModal from '@/components/modals/NotificationModal';
-import { Octicons, MaterialIcons, MaterialCommunityIcons, FontAwesome6 } from '@expo/vector-icons';
+import { Octicons, MaterialIcons, MaterialCommunityIcons, FontAwesome6, AntDesign } from '@expo/vector-icons';
 import { useState } from 'react';
 import { useSession } from '@/context/SessionContext';
 import { useReverseGeocoding } from '@/hooks/useReverseGeocoding';
@@ -71,7 +71,7 @@ export default function HomeScreen() {
         <View style={styles.mapContainer}>
             <ThemedView type='secondary' style={styles.expandButton}>
               <TouchableOpacity onPress={() => router.push('/map-view')}>
-                <FontAwesome6 name="expand" size={20} color="#ccc" />
+                <AntDesign name="arrowsalt" size={20} color="white" />
               </TouchableOpacity>
             </ThemedView>
 
@@ -101,7 +101,7 @@ export default function HomeScreen() {
         <View>
           <View style={styles.menuContainer}>
             <TouchableOpacity onPress={() => router.push('/routes/routes')} style={styles.menuButton}>
-              <MaterialIcons name="route" size={24} color="black" />
+              <AntDesign name="retweet" size={24} color="black" />
               <ThemedText>Routes</ThemedText>
             </TouchableOpacity>
 
@@ -110,7 +110,7 @@ export default function HomeScreen() {
             </View>
 
             <TouchableOpacity onPress={() => router.push('/itineraries/itineraries')} style={styles.menuButton}>
-              <Octicons name="paper-airplane" size={24} color="black" />
+              <AntDesign name="paperclip" size={24} color="black" />
               <ThemedText>Itineraries</ThemedText>
             </TouchableOpacity>
 
@@ -119,13 +119,13 @@ export default function HomeScreen() {
             </View>
 
             <TouchableOpacity onPress={() => router.push('/weather')} style={styles.menuButton}>
-              <MaterialCommunityIcons name="weather-sunset" size={24} color="black" />
+              <AntDesign name="cloudo" size={24} color="black" />
               <ThemedText>Weather</ThemedText>
             </TouchableOpacity>
           </View>
         </View>
 
-        <View style={styles.infoContainer}>
+        {/* <View style={styles.infoContainer}>
           {wikiImage && (
             <Image
               source={{ uri: wikiImage }}
@@ -179,7 +179,7 @@ export default function HomeScreen() {
             />
           )}
         </View>
-      </View>
+      </View> */}
 
         <Portal>
           <Modal
@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   locationShadow: {
-    width: '88%',
+    width: '90%',
     height: 70,
     marginTop: -50,
     alignSelf: 'center',

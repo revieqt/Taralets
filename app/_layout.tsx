@@ -40,6 +40,7 @@ export default function RootLayout() {
           <Stack.Screen name="routes/create" options={{ headerShown: false }} />
           <Stack.Screen name="itineraries/itineraries" options={{ headerShown: false}} />
           <Stack.Screen name="itineraries/create" options={{ headerShown: false}} />
+          <Stack.Screen name="groups/create" options={{ headerShown: false}} />
           <Stack.Screen name="weather" options={{ headerShown: false}} />
           <Stack.Screen name="tourGuideApplication" options={{ headerShown: false }} />
           <Stack.Screen name="login" options={{ headerShown: false }} />
