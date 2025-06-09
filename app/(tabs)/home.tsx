@@ -32,8 +32,8 @@ export default function HomeScreen() {
 
   return (
     <PaperProvider>
-      <ThemedView style={{ flex: 1, padding: 20 }}>
-        
+      <ThemedView style={{ flex: 1}}>
+        <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
         <LinearGradient
           colors={[
             'rgb(0,101,248)',   // Top: solid blue
@@ -51,7 +51,7 @@ export default function HomeScreen() {
             zIndex: -100,
           }}
         />
-        <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
+        
         <View style={styles.header}>
           <View>
             <ThemedText type='subtitle' style={{ color: 'white', fontSize: 17, marginTop: 5 }}>
@@ -125,7 +125,11 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* <View style={styles.infoContainer}>
+        <ThemedView style={styles.taraContainer}>
+          <ThemedText>dsa</ThemedText>
+        </ThemedView>
+
+        <View style={styles.infoContainer}>
           {wikiImage && (
             <Image
               source={{ uri: wikiImage }}
@@ -179,7 +183,7 @@ export default function HomeScreen() {
             />
           )}
         </View>
-      </View> */}
+      </View>
 
         <Portal>
           <Modal
@@ -295,5 +299,13 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     height: 210,
     elevation: 10,
+  },
+  taraContainer: {
+    width: '100%',
+    height: 100,
+    borderRadius: 16,
+    marginTop: 10,
+    padding: 16,
+    elevation: 5,
   },
 });

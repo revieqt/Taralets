@@ -11,8 +11,6 @@ type JoinGroupModalProps = {
   onClose: () => void;
 };
 
-const { width } = Dimensions.get('window');
-
 export default function JoinGroupModal({ visible, onClose }: JoinGroupModalProps) {
   const [inviteCode, setInviteCode] = useState('');
 
@@ -29,21 +27,21 @@ export default function JoinGroupModal({ visible, onClose }: JoinGroupModalProps
         </TouchableOpacity>
 
         <View style={styles.centeredView}>
+          <ThemedText type="title">Join Group</ThemedText>
+          <ThemedText type='default'>Input invite code to join another group.</ThemedText>
+          
+          <TextField
+              placeholder="Enter invite code"
+              value={inviteCode}
+              onChangeText={setInviteCode}
+              style={{ marginBottom: 20 }}
+            />
 
-            <ThemedText type="title">Join Group</ThemedText>
-            <ThemedText type='default'>Input invite code to join another group.</ThemedText>
-            <TextField
-                placeholder="Enter invite code"
-                value={inviteCode}
-                onChangeText={setInviteCode}
-                style={{ marginBottom: 20 }}
-              />
-
-              <GradientButton
-                title="Join Group"
-                onPress={() => {}}
-                buttonStyle={{ marginTop: 8 }}
-              />
+          <GradientButton
+            title="Join Group"
+            onPress={() => {}}
+            buttonStyle={{ marginTop: 8 }}
+          />
         </View>
       </ThemedView>
     </Modal>
@@ -53,7 +51,6 @@ export default function JoinGroupModal({ visible, onClose }: JoinGroupModalProps
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    justifyContent: 'center',
   },
   floatingCloseButton: {
     position: 'absolute',

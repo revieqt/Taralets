@@ -6,7 +6,7 @@ import TextField from '@/components/TextField';
 import DatePicker from '@/components/DatePicker';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { db } from '../../auth/firebaseConfig';
+import { db } from '../../services/firestore/config'; // Adjust the import path as necessary
 import { collection, addDoc, Timestamp } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { Ionicons } from '@expo/vector-icons';

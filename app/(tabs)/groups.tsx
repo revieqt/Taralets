@@ -3,8 +3,9 @@ import { useState, useRef, useEffect } from 'react';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import TabChooser from '@/components/TabChooser';
-import { MaterialIcons } from '@expo/vector-icons';
-import JoinGroupModal from '../groups/JoinGroupModal';
+import { MaterialIcons, AntDesign } from '@expo/vector-icons';
+import JoinGroupModal from '../groups/join';
+import ViewGroupModal from '../groups/view';
 import { useRouter } from 'expo-router';
 import { useSession } from '@/context/SessionContext';
 import { getGroupById } from '@/services/firestore/groupDbService';
@@ -18,6 +19,8 @@ export default function GroupScreen() {
   const [loadingGroups, setLoadingGroups] = useState(false);
   const smallFabAnim = useRef(new Animated.Value(0)).current;
   const { session } = useSession();
+  const [viewModalVisible, setViewModalVisible] = useState(false);
+  const [selectedGroup, setSelectedGroup] = useState<any>(null);
 
   useEffect(() => {
     if (fabOpen) {
@@ -58,8 +61,13 @@ export default function GroupScreen() {
   return (
     <ThemedView style={{ flex: 1, paddingTop: Platform.OS === 'ios' ? 20 : 50, padding: 20 }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
-        <ThemedText type='title'>Groups</ThemedText>
-
+        <View style={styles.header}>
+          <ThemedText type='title'>Groups</ThemedText>
+          <TouchableOpacity style={{ justifyContent:'center', alignItems: 'center' }} onPress={() => router.push('/groups/chat')}>
+            <AntDesign name="message1" size={20} color="black" />
+          </TouchableOpacity>
+        </View>
+        
         <TabChooser
           tabs={['Tours', 'Your Groups']}
           onTabChange={setActiveTab}
@@ -85,13 +93,20 @@ export default function GroupScreen() {
                 <ThemedText>No groups found. {session?.user?.groups}</ThemedText>
               ) : (
                 userGroups.map((group, idx) => (
-                  <ThemedView key={group?.inviteCode || idx} style={styles.groupItem}>
+                  <TouchableOpacity
+                    key={group?.inviteCode || idx}
+                    style={styles.groupItem}
+                    onPress={() => {
+                      setSelectedGroup(group);
+                      setViewModalVisible(true);
+                    }}
+                  >
                     <ThemedText type="default">{group?.name || 'Unnamed Group'}</ThemedText>
                     <ThemedText type="default" style={{ fontSize: 12, color: '#888' }}>
                       Invite Code: {group?.inviteCode}
                     </ThemedText>
-                  </ThemedView>
-                ))
+                  </TouchableOpacity>
+))
               )}
           </>
         )}
@@ -131,7 +146,7 @@ export default function GroupScreen() {
                     setFabOpen(false);
                     setJoinModalVisible(true);
                   }}>
-                <MaterialIcons name="input" size={22} color="#205781" />
+                <MaterialIcons name="input" size={22} color="#00FFDE" />
               </TouchableOpacity>
             </Animated.View>
             {/* Main FAB */}
@@ -157,16 +172,22 @@ export default function GroupScreen() {
         visible={joinModalVisible}
         onClose={() => setJoinModalVisible(false)}
       />
+
+      <ViewGroupModal
+        visible={viewModalVisible}
+        onClose={() => setViewModalVisible(false)}
+        group={selectedGroup}
+      />
     </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+  
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   recommendedContainer: {
     width: '100%',
@@ -192,7 +213,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 50,
-    backgroundColor: '#205781',
+    backgroundColor: '#00FFDE',
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 6,
@@ -239,7 +260,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#205781',
+    backgroundColor: '#00FFDE',
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 8,
@@ -260,12 +281,8 @@ const styles = StyleSheet.create({
   },
   groupItem: {
     padding: 16,
-    marginVertical: 8,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    borderBottomColor: '#ccc',
+    borderBottomWidth: 1,
+    backgroundColor: '#fffff',
   },
 });

@@ -4,7 +4,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { router } from "expo-router";
-import { db } from '../../auth/firebaseConfig';
+import { db } from '../../services/firestore/config'; // Adjust the import path as necessary
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { getAuth } from "firebase/auth";
 

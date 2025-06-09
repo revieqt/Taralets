@@ -3,7 +3,7 @@ import { View, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, Ima
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../auth/firebaseConfig';
+import { auth } from '../services/firestore/config'; // Adjust the import path as necessary
 import { router } from 'expo-router';
 import TextField from '@/components/TextField';
 import PasswordField from '@/components/PasswordField';

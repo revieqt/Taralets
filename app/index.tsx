@@ -1,7 +1,7 @@
 // app/index.tsx
 import { useEffect } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
-import { auth, db } from '../auth/firebaseConfig';
+import { auth, db } from '../services/firestore/config'; // Adjust the import path as necessary
 import { doc, getDoc } from 'firebase/firestore';
 import { router } from 'expo-router';
 import { Alert } from 'react-native';

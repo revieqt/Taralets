@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Modal, View, ActivityIndicator, TouchableOpacity, StyleSheet, ScrollView, Dimensions, Alert } from 'react-native';
-import { db } from '../../auth/firebaseConfig';
+import { db } from '../../services/firestore/config'; // Adjust the import path as necessary
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { ThemedText } from '@/components/ThemedText';
 import MapView, { Marker, Polyline } from 'react-native-maps';

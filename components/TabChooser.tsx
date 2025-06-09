@@ -73,15 +73,15 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: 'transparent',
-    borderColor: '#ccc',
+    borderColor: 'transparent',
     borderWidth: 2,
   },
   activeButton: {
-    backgroundColor: '#205781',
-    borderColor: '#205781',
+    backgroundColor: '#00CAFF',
+    borderColor: '#00CAFF',
   },
   text: {
-    color: '#205781',
+    color: '#ccc',
   },
   activeText: {
     color: '#fff',

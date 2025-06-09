@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { ScrollView, StyleSheet, KeyboardAvoidingView, Platform, Image, TouchableOpacity, View } from 'react-native';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth, db } from '../auth/firebaseConfig';
+import { auth, db } from '../services/firestore/config'; // Adjust the import path as necessary
 import { router } from 'expo-router';
 import { doc, setDoc, Timestamp, getDocs, collection, query, where } from 'firebase/firestore';
 import { ThemedText } from '@/components/ThemedText';

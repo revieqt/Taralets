@@ -6,7 +6,7 @@ import TextField from '@/components/TextField';
 import GradientButton from '@/components/GradientButton';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { db } from '../auth/firebaseConfig';
+import { db } from '../services/firestore/config'; // Adjust the import path as necessary
 import { collection, addDoc, Timestamp } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { useRouter } from 'expo-router';

@@ -1,5 +1,5 @@
 import { collection, doc, getDoc, setDoc, addDoc, serverTimestamp, updateDoc, arrayUnion } from 'firebase/firestore';
-import { db } from '../../auth/firebaseConfig'; // Adjust path based on your project structure
+import { db } from './config'; // Adjust path based on your project structure
 
 const GROUPS_COLLECTION = 'groups';
 const USERS_COLLECTION = 'users';

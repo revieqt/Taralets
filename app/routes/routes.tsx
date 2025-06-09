@@ -3,7 +3,7 @@ import { StyleSheet, Platform, TouchableOpacity, FlatList, View } from 'react-na
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import AntDesign from '@expo/vector-icons/AntDesign';
-import { db } from '../../auth/firebaseConfig';
+import { db } from '../../services/firestore/config'; // Adjust the import path as necessary
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { getAuth } from "firebase/auth";
 import { router } from "expo-router";

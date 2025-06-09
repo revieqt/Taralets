@@ -84,5 +84,6 @@ const styles = StyleSheet.create({
     marginLeft: 24,
     position: 'absolute', // absolute inside animated view for measurement
     width: '100%',
+    
   },
 });
