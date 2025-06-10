@@ -17,31 +17,23 @@ interface GroupData {
   inviteCode: string;
   status: 'active';
   type: 'group';
-  createdOn: any; // Firestore Timestamp
+  createdOn: any;
   itinerary?: string;
   members?: string[];
 }
 
-/**
- * Generate a random alphanumeric invite code
- */
 const generateInviteCode = (length = 6): string => {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz';
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   return Array.from({ length }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
 };
 
-/**
- * Fetch a group by its Firestore ID
- */
 export const getGroupById = async (groupId: string): Promise<GroupData | null> => {
   const ref = doc(db, GROUPS_COLLECTION, groupId);
   const snapshot = await getDoc(ref);
   return snapshot.exists() ? (snapshot.data() as GroupData) : null;
 };
 
-/**
- * Add a group ID to the user's "groups" array field in the user document
- */
+
 export const addGroupToUserInfo = async (userId: string, groupId: string): Promise<void> => {
   const userRef = doc(db, USERS_COLLECTION, userId);
   await updateDoc(userRef, {
@@ -49,10 +41,25 @@ export const addGroupToUserInfo = async (userId: string, groupId: string): Promi
   });
 };
 
-/**
- * Create a new group document in Firestore with auto-generated ID
- * and add the group ID to the user's "groups" array field
- */
+export const getGroupMembers = async (groupId: string): Promise<any[]> => {
+  const groupRef = doc(db, GROUPS_COLLECTION, groupId);
+  const groupSnap = await getDoc(groupRef);
+
+  if (!groupSnap.exists()) return [];
+
+  const groupData = groupSnap.data() as GroupData;
+  const memberIds = groupData.members || [];
+
+  const memberPromises = memberIds.map(async (userId) => {
+    const userRef = doc(db, USERS_COLLECTION, userId);
+    const userSnap = await getDoc(userRef);
+    return userSnap.exists() ? { id: userId, ...userSnap.data() } : null;
+  });
+  console.log('memberIds:', memberIds);
+  const members = await Promise.all(memberPromises);
+  return members.filter(Boolean);
+};
+
 export const createGroup = async (
   { name, admin, itinerary, members }: CreateGroupParams
 ): Promise<void> => {
@@ -68,7 +75,5 @@ export const createGroup = async (
   };
 
   const docRef = await addDoc(collection(db, GROUPS_COLLECTION), groupData);
-
-  // Add the group ID to the user's "groups" array field
   await addGroupToUserInfo(admin, docRef.id);
 };

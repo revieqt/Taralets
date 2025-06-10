@@ -55,146 +55,191 @@ export default function GroupScreen() {
   }
 }, [activeTab, session?.user?.groups]);
 
-  // The vertical distance the small FAB will travel up
   const SMALL_FAB_DISTANCE = 70;
 
   return (
-    <ThemedView style={{ flex: 1, paddingTop: Platform.OS === 'ios' ? 20 : 50, padding: 20 }}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
-        <View style={styles.header}>
-          <ThemedText type='title'>Groups</ThemedText>
-          <TouchableOpacity style={{ justifyContent:'center', alignItems: 'center' }} onPress={() => router.push('/groups/chat')}>
-            <AntDesign name="message1" size={20} color="black" />
+    <ThemedView style={{ flex: 1}}>
+      {activeTab === 0 && (
+        <>
+          <View style={styles.recommendedContainer}>
+
+          </View>
+        </>
+      )}
+
+      <View style={{ flex: 1, paddingTop: Platform.OS === 'ios' ? 20 : 50, padding: 20 }}>
+        <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
+          <ThemedText type='title' style={{ color: activeTab === 0 ? '#fff' : undefined }}>Groups</ThemedText>
+          
+          <TabChooser
+            tabs={['Tours', 'Your Groups', 'Chats']}
+            onTabChange={setActiveTab}
+            containerStyle={{ marginTop: 20, marginBottom: 10 }}
+            activeButtonStyle={activeTab === 0 ? { backgroundColor: 'rgba(255,255,255,0.3)', borderColor: '#fff' } : undefined}
+            activeTextStyle={activeTab === 0 ? { color: '#fff' } : undefined}
+            buttonStyle={activeTab === 0 ? { borderColor: '#fff' } : undefined}
+            textStyle={activeTab === 0 ? { color: '#fff' } : undefined}
+          />
+
+          {activeTab === 0 && (
+            <>
+              <ThemedView style={styles.tourContent}>
+                <View style={styles.searchContainer}></View>
+              </ThemedView>
+            </>
+          )}
+
+          {activeTab === 1 && (
+            <>
+                {loadingGroups ? (
+                  <ThemedText>Loading...</ThemedText>
+                ) : userGroups.length === 0 ? (
+                  <ThemedText>No groups found. {session?.user?.groups}</ThemedText>
+                ) : (
+                  userGroups.map((group, idx) => (
+                    <TouchableOpacity
+                      key={group?.inviteCode || idx}
+                      style={styles.groupItem}
+                      onPress={() => {
+                        setSelectedGroup(group);
+                        setViewModalVisible(true);
+                      }}
+                    >
+                      <ThemedText type="default">{group?.name || 'Unnamed Group'}</ThemedText>
+                      <ThemedText type="default" style={{ fontSize: 12, color: '#888' }}>
+                        Invite Code: {group?.inviteCode}
+                      </ThemedText>
+                    </TouchableOpacity>
+                  ))
+                )}
+            </>
+          )}
+
+          {activeTab === 2 && (
+            <>
+              <ThemedView>
+              </ThemedView>
+            </>
+          )}
+
+
+        </ScrollView>
+
+        {/* Floating Action Button and Modal */}
+        <Modal
+          visible={fabOpen}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setFabOpen(false)}
+        >
+          <TouchableOpacity style={styles.modalBackground} activeOpacity={1} onPress={() => setFabOpen(false)}>
+              <View style={styles.fabModalContainer}>
+                <Animated.View
+                  style={[
+                    styles.fabRow,
+                    {
+                      bottom: 130,
+                      right: 10,
+                      opacity: smallFabAnim,
+                      transform: [
+                        {
+                          translateY: smallFabAnim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [0, -SMALL_FAB_DISTANCE],
+                          }),
+                        },
+                      ],
+                    },
+                  ]}
+                >
+                  <Text style={styles.fabLabel}>Send New Message</Text>
+                  <TouchableOpacity style={styles.smallFab}
+                    onPress={() => {
+                        setFabOpen(false);
+                        setJoinModalVisible(true);
+                      }}>
+                    <AntDesign name="mail" size={20} color="#00FFDE" />
+                  </TouchableOpacity>
+                </Animated.View>
+
+                <Animated.View
+                  style={[
+                    styles.fabRow,
+                    {
+                      bottom: 75,
+                      right: 10,
+                      opacity: smallFabAnim,
+                      transform: [
+                        {
+                          translateY: smallFabAnim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [0, -SMALL_FAB_DISTANCE],
+                          }),
+                        },
+                      ],
+                    },
+                  ]}
+                >
+                  <Text style={styles.fabLabel}>Join with Invite code</Text>
+                  <TouchableOpacity style={styles.smallFab}
+                    onPress={() => {
+                        setFabOpen(false);
+                        setJoinModalVisible(true);
+                      }}>
+                    <MaterialIcons name="input" size={20} color="#00FFDE" />
+                  </TouchableOpacity>
+                </Animated.View>
+                {/* Main FAB */}
+                <View style={styles.fabRow}>
+                  <Text style={styles.fabLabel}>Create Group</Text>
+                  <TouchableOpacity style={styles.fabMain} onPress={() => {
+                        setFabOpen(false);
+                        router.push('/groups/create');
+                      }}> 
+                    <MaterialIcons name="add" size={32} color="#fff" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            {/* </GlassView> */}
+            
           </TouchableOpacity>
-        </View>
-        
-        <TabChooser
-          tabs={['Tours', 'Your Groups']}
-          onTabChange={setActiveTab}
-          containerStyle={{ marginTop: 20, marginBottom: 10 }}
+        </Modal>
+
+        {/* Main FAB */}
+        <TouchableOpacity style={styles.fab} onPress={() => setFabOpen(true)}>
+          <MaterialIcons name="add" size={32} color="#fff" />
+        </TouchableOpacity>
+
+        <JoinGroupModal
+          visible={joinModalVisible}
+          onClose={() => setJoinModalVisible(false)}
         />
 
-        {activeTab === 0 && (
-          <>
-            <ThemedText type='defaultSemiBold' style={{ marginTop: 10 }}>
-              Recommended for you
-            </ThemedText>
-            <View style={styles.recommendedContainer}>
-              {/* Tours content goes here */}
-            </View>
-          </>
-        )}
-
-        {activeTab === 1 && (
-          <>
-              {loadingGroups ? (
-                <ThemedText>Loading...</ThemedText>
-              ) : userGroups.length === 0 ? (
-                <ThemedText>No groups found. {session?.user?.groups}</ThemedText>
-              ) : (
-                userGroups.map((group, idx) => (
-                  <TouchableOpacity
-                    key={group?.inviteCode || idx}
-                    style={styles.groupItem}
-                    onPress={() => {
-                      setSelectedGroup(group);
-                      setViewModalVisible(true);
-                    }}
-                  >
-                    <ThemedText type="default">{group?.name || 'Unnamed Group'}</ThemedText>
-                    <ThemedText type="default" style={{ fontSize: 12, color: '#888' }}>
-                      Invite Code: {group?.inviteCode}
-                    </ThemedText>
-                  </TouchableOpacity>
-))
-              )}
-          </>
-        )}
-      </ScrollView>
-
-      {/* Floating Action Button and Modal */}
-      <Modal
-        visible={fabOpen}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setFabOpen(false)}
-      >
-        <TouchableOpacity style={styles.modalBackground} activeOpacity={1} onPress={() => setFabOpen(false)}>
-          <View style={styles.fabModalContainer}>
-            {/* Animated Small FAB */}
-            <Animated.View
-              style={[
-                styles.fabRow,
-                {
-                  bottom: 75,
-                  right: 10,
-                  opacity: smallFabAnim,
-                  transform: [
-                    {
-                      translateY: smallFabAnim.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [0, -SMALL_FAB_DISTANCE],
-                      }),
-                    },
-                  ],
-                },
-              ]}
-            >
-              <Text style={styles.fabLabel}>Join with Invite code</Text>
-              <TouchableOpacity style={styles.smallFab}
-                onPress={() => {
-                    setFabOpen(false);
-                    setJoinModalVisible(true);
-                  }}>
-                <MaterialIcons name="input" size={22} color="#00FFDE" />
-              </TouchableOpacity>
-            </Animated.View>
-            {/* Main FAB */}
-            <View style={styles.fabRow}>11
-              <Text style={styles.fabLabel}>Create Group</Text>
-              <TouchableOpacity style={styles.fabMain} onPress={() => {
-                    setFabOpen(false);
-                    router.push('/groups/create');
-                  }}> 
-                <MaterialIcons name="add" size={32} color="#fff" />
-              </TouchableOpacity>
-            </View>
-          </View>
-        </TouchableOpacity>
-      </Modal>
-
-      {/* Main FAB */}
-      <TouchableOpacity style={styles.fab} onPress={() => setFabOpen(true)}>
-        <MaterialIcons name="add" size={32} color="#fff" />
-      </TouchableOpacity>
-
-      <JoinGroupModal
-        visible={joinModalVisible}
-        onClose={() => setJoinModalVisible(false)}
-      />
-
-      <ViewGroupModal
-        visible={viewModalVisible}
-        onClose={() => setViewModalVisible(false)}
-        group={selectedGroup}
-      />
+        <ViewGroupModal
+          visible={viewModalVisible}
+          onClose={() => setViewModalVisible(false)}
+          group={selectedGroup}
+        />
+      </View>
     </ThemedView>
+    
   );
 }
 
 const styles = StyleSheet.create({
-  
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
   recommendedContainer: {
     width: '100%',
-    height: 200,
+    height: 400,
     borderRadius: 16,
-    backgroundColor: '#f0f0f0',
-    marginTop: 10,
+    backgroundColor: '#ccc',
+    position: 'absolute',
+    zIndex: -50,
+  },
+  tourContent:{
+    marginTop: 240,
+    width: '100%',
+    height: 100,
+
   },
   searchContainer: {
     marginTop: 20,

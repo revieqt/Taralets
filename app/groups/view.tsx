@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
-import { Modal, View, StyleSheet, TouchableOpacity, ScrollView} from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { Modal, View, StyleSheet, TouchableOpacity, ScrollView, Dimensions, Text } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { MaterialIcons } from '@expo/vector-icons';
+import { AntDesign, MaterialIcons } from '@expo/vector-icons';
 import TabChooser from '@/components/TabChooser';
+import { getGroupMembers } from '@/services/firestore/groupDbService';
 
 type ViewGroupProps = {
   visible: boolean;
@@ -11,8 +12,26 @@ type ViewGroupProps = {
   group?: any;
 };
 
+const screenHeight = Dimensions.get('window').height;
+
 export default function ViewGroupModal({ visible, onClose, group }: ViewGroupProps) {
   const [activeTab, setActiveTab] = useState(0);
+  const [members, setMembers] = useState<any[]>([]);
+  const [loadingMembers, setLoadingMembers] = useState(false);
+
+  useEffect(() => {
+  if (activeTab === 1 && group?.id) {
+    setLoadingMembers(true);
+    console.log('Fetching members for group:', group.id);
+    getGroupMembers(group.id)
+      .then((data) => {
+        console.log('Fetched members:', data);
+        setMembers(data);
+      })
+      .catch(() => setMembers([]))
+      .finally(() => setLoadingMembers(false));
+  }
+}, [activeTab, group?.id]);
 
   return (
     <Modal
@@ -22,10 +41,15 @@ export default function ViewGroupModal({ visible, onClose, group }: ViewGroupPro
       onRequestClose={onClose}
     >
       <ThemedView style={styles.overlay}>
-        <ScrollView contentContainerStyle={{ paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
-          <TouchableOpacity onPress={onClose} style={styles.backButton}>
-            <MaterialIcons name="close" size={28} color="#333"/>
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <TouchableOpacity onPress={onClose}>
+            <View style={styles.backButton}>
+              <View style={styles.backIcon}><AntDesign name="left" size={15} color="white" /></View>
+              
+              <Text style={{marginRight: 10, color: 'white'}}>Back</Text>
+            </View>
           </TouchableOpacity>
+
           <View style={styles.content}>
             <ThemedText type="title">{group?.name || 'Group Info'}</ThemedText>
             <ThemedText type='default'>Invite Code: {group?.inviteCode}</ThemedText>
@@ -47,8 +71,22 @@ export default function ViewGroupModal({ visible, onClose, group }: ViewGroupPro
             {activeTab === 1 && (
               <>
                 <ThemedText type='defaultSemiBold' style={{ marginTop: 10 }}>
-                  Recommended for you
+                  Members
                 </ThemedText>
+                {loadingMembers ? (
+                  <ThemedText style={{ marginTop: 10 }}>Loading members...</ThemedText>
+                ) : members.length === 0 ? (
+                  <ThemedText style={{ marginTop: 10 }}>No members found.</ThemedText>
+                ) : (
+                  members.map((member, idx) => (
+                    <View key={member.id || idx} style={{ marginTop: 10, marginBottom: 6 }}>
+                      <ThemedText type="default">{member.fname} {member.lname}</ThemedText>
+                      <ThemedText type="default" style={{ fontSize: 12, color: '#888' }}>
+                        {member.email}
+                      </ThemedText>
+                    </View>
+                  ))
+                )}
               </>
             )}
           </View>
@@ -70,17 +108,32 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 6,
     elevation: 4,
-    borderColor: '#333',
+    flexDirection: 'row',
+    gap: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderColor: 'white',
     borderWidth: 1,
+  },
+  backIcon:{
+    justifyContent: 'center',
+    borderColor: 'white',
+    borderWidth: 1,
+    borderRadius: 25,
+    width: 25,
+    height: 25,
+    alignItems: 'center',
   },
   content: {
     width: '100%',
-    marginTop: 250,
+    marginTop: screenHeight / 2,
     maxWidth: 400,
     padding: 20,
+    paddingTop: 30,
     borderColor: '#ccc',
     borderWidth: 1,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    minHeight: screenHeight / 2,
   },
 });

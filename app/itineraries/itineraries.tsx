@@ -20,7 +20,7 @@ function formatDate(date: any) {
   }
 }
 
-export default function TabTwoScreen() {
+export default function Itineraries() {
   const [selectedTab, setSelectedTab] = useState<'pending' | 'archive'>('pending');
   const [pendingItineraries, setPendingItineraries] = useState<any[]>([]);
   const [archivedItineraries, setArchivedItineraries] = useState<any[]>([]);

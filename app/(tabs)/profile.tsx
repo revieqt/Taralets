@@ -13,6 +13,7 @@ import OutlineButton from '@/components/OutlineButton';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import { useSession } from '@/context/SessionContext';
+import VerticalRule from '@/components/VerticalRule';
 
 const Profile = () => {
   const { session, updateSession, clearSession } = useSession();
@@ -208,14 +209,6 @@ const Profile = () => {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Gradient Header */}
-        <LinearGradient
-          colors={['#205781', '#7AB2D3']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.header}
-        />
-        {/* Profile Image in front */}
         <TouchableOpacity style={styles.profileImageWrapper} onPress={handleProfileImagePress} disabled={uploading}>
           <Image
             source={
@@ -248,40 +241,63 @@ const Profile = () => {
           <ThemedText style={styles.accountTypeText}>{accountType}</ThemedText>
         </View>
 
+        <ThemedView style={styles.subInfo}>
+          <TouchableOpacity style={styles.menuButton}>
+            <ThemedText>Routes</ThemedText>
+          </TouchableOpacity>
+
+          <View style={styles.verticalRule}>
+            <VerticalRule height="50%" color="#aaa" thickness={1} />
+          </View>
+
+          <TouchableOpacity style={styles.menuButton}>
+            <ThemedText>Itineraries</ThemedText>
+          </TouchableOpacity>
+
+          <View style={styles.verticalRule}>
+            <VerticalRule height="50%" color="#aaa" thickness={1} />
+          </View>
+
+          <TouchableOpacity style={styles.menuButton}>
+            <ThemedText>Weather</ThemedText>
+          </TouchableOpacity>
+        </ThemedView>
+
         {/* Options Section */}
         <ThemedView style={styles.options}>
           <Collapsible title="General Information">
-            <ThemedText style={styles.collapsibleChild}>
-              Name: {userInfo.fname} {userInfo.mname} {userInfo.lname}
-            </ThemedText>
-            <ThemedText style={styles.collapsibleChild}>
-              Username: {userInfo.username}
-            </ThemedText>
-            <ThemedText style={styles.collapsibleChild}>
-              Gender: {userInfo.gender}
-            </ThemedText>
-            <ThemedText style={styles.collapsibleChild}>
-              Email: {userInfo.email}
-            </ThemedText>
-            <ThemedText style={styles.collapsibleChild}>
-              Phone: {userInfo.contactNumber}
-            </ThemedText>
-            <ThemedText style={styles.collapsibleChild}>
-              Type: {accountType}
-            </ThemedText>
-            <ThemedText style={styles.collapsibleChild}>
-              Status: {userInfo.status}
-            </ThemedText>
-            <ThemedText style={styles.collapsibleChild}>
-              Created: {userInfo.createdOn instanceof Date ? userInfo.createdOn.toLocaleString() : ''}
-            </ThemedText>
+            <ThemedView style={styles.collapsibleChild}>
+              <ThemedText>Name: {userInfo.fname} {userInfo.mname} {userInfo.lname}</ThemedText>
+            </ThemedView>
+            <ThemedView style={styles.collapsibleChild}>
+              <ThemedText>Username: {userInfo.username}</ThemedText>
+            </ThemedView>
+            <ThemedView style={styles.collapsibleChild}>
+              <ThemedText>Gender: {userInfo.gender}</ThemedText>
+            </ThemedView>
+            <ThemedView style={styles.collapsibleChild}>
+              <ThemedText>Email: {userInfo.email}</ThemedText>
+            </ThemedView>
+            <ThemedView style={styles.collapsibleChild}>
+              <ThemedText>Phone: {userInfo.contactNumber}</ThemedText>
+            </ThemedView>
+            <ThemedView style={styles.collapsibleChild}>
+              <ThemedText>Type: {accountType}</ThemedText>
+            </ThemedView>
+            <ThemedView style={styles.collapsibleChild}>
+              <ThemedText>Status: {userInfo.status}</ThemedText>
+            </ThemedView>
+            <ThemedView style={styles.collapsibleChild}>
+              <ThemedText>Created: {userInfo.createdOn instanceof Date ? userInfo.createdOn.toLocaleString() : ''}</ThemedText>
+            </ThemedView>
           </Collapsible>
 
-          
-
           <Collapsible title="Privacy and Security">
+
             <TouchableOpacity onPress={() => setModalVisible(true)}>
-              <ThemedText style={styles.collapsibleChild}>Change Password</ThemedText>
+              <ThemedView style={styles.collapsibleChild} >
+                <ThemedText >Change Password</ThemedText>
+              </ThemedView>
             </TouchableOpacity>
           </Collapsible>
 
@@ -289,16 +305,22 @@ const Profile = () => {
           {userInfo.type === 'tourGuide' ? 
             <View>
               <TouchableOpacity onPress={() => router.push('/tourGuideApplication')}>
-                <ThemedText style={styles.collapsibleChild}>View Tour Guide Information</ThemedText>
+                <ThemedView style={styles.collapsibleChild} >
+                  <ThemedText >View Tour Guide Information</ThemedText>
+                </ThemedView>
               </TouchableOpacity>
 
               <TouchableOpacity onPress={() => router.push('/tourGuideApplication')}>
-                <ThemedText style={styles.collapsibleChild}>Manage Tours</ThemedText>
+                <ThemedView style={styles.collapsibleChild} >
+                  <ThemedText >Manage Tours</ThemedText>
+                </ThemedView>
               </TouchableOpacity>
             </View>
             :
             <TouchableOpacity onPress={() => router.push('/tourGuideApplication')}>
-              <ThemedText style={styles.collapsibleChild}>Apply as Tour Guide</ThemedText>
+              <ThemedView style={styles.collapsibleChild} >
+                <ThemedText >Apply as Tour Guide</ThemedText>
+              </ThemedView>
             </TouchableOpacity>
           }
           </Collapsible>
@@ -306,13 +328,21 @@ const Profile = () => {
           {/* UNFINISHED AREA */}
           <Collapsible title="Help and Support">
             <TouchableOpacity>
-              <ThemedText style={styles.collapsibleChild}>App Manual</ThemedText>
+              <ThemedView style={styles.collapsibleChild}>
+                <ThemedText >App Manual</ThemedText>
+              </ThemedView>
             </TouchableOpacity>
+            
             <TouchableOpacity>
-              <ThemedText style={styles.collapsibleChild}>Terms and Conditions</ThemedText>
+              <ThemedView style={styles.collapsibleChild}>
+                <ThemedText >Terms and Conditions</ThemedText>
+              </ThemedView>
             </TouchableOpacity>
+            
             <TouchableOpacity>
-              <ThemedText style={styles.collapsibleChild}>Contact Support</ThemedText>
+              <ThemedView style={styles.collapsibleChild}>
+                <ThemedText >Contact Support</ThemedText>
+              </ThemedView>
             </TouchableOpacity>
           </Collapsible>
         </ThemedView>
@@ -422,29 +452,29 @@ const styles = StyleSheet.create({
   },
   profileImageWrapper: {
     position: 'absolute',
-    top: 110,
+    top: 80,
     alignSelf: 'center',
     zIndex: 2,
-    width: 110,
-    height: 110,
-    borderRadius: 55,
+    width: 130,
+    height: 130,
+    borderRadius: 100,
     backgroundColor: '#fff',
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 8,
-    shadowColor: '#000',
+    shadowColor: 'blue',
     shadowOpacity: 0.18,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 4 },
   },
   profileImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 125,
+    height: 125,
+    borderRadius: 100,
     resizeMode: "cover",
   },
   nameSection: {
-    marginTop: 230,
+    marginTop: 220,
     alignItems: 'center',
     marginBottom: 10,
   },
@@ -463,25 +493,35 @@ const styles = StyleSheet.create({
     marginTop: 2,
     fontWeight: 'bold',
   },
+  subInfo:{
+    width: '90%',
+    height: 80,
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  menuButton: {
+    width: '26%',
+    justifyContent: 'center',
+    textAlign: 'center',
+    alignItems: 'center',
+    gap: 5,
+  },
+  verticalRule: {
+    alignSelf: 'center',
+  },
   options: {
     marginTop: 10,
-    padding: 15,
-    borderRadius: 14,
-    marginHorizontal: 16,
-    elevation: 2,
+    padding: 20,
     gap: 20,
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
   },
+  
   collapsibleChild: {
-    padding: 5,
+    padding: 10,
     fontSize: 15,
     width: '100%',
-    borderColor: '#ccc',
-    borderWidth: 1,
-  },
+    },
   logoutContainer: {
     margin:15,
   },

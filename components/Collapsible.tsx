@@ -9,7 +9,6 @@ import {
   UIManager,
   View,
 } from 'react-native';
-import AntDesign from '@expo/vector-icons/AntDesign';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Colors } from '@/constants/Colors';
@@ -48,12 +47,6 @@ export function Collapsible({ children, title }: PropsWithChildren & { title: st
         style={styles.heading}
         onPress={() => setIsOpen((value) => !value)}
         activeOpacity={0.8}>
-        <AntDesign
-          name="right"
-          size={18}
-          color={theme === 'light' ? Colors.light.icon : Colors.dark.icon}
-          style={{ transform: [{ rotate: isOpen ? '90deg' : '0deg' }] }}
-        />
         <ThemedText type="defaultSemiBold">{title}</ThemedText>
       </TouchableOpacity>
 
@@ -81,7 +74,7 @@ const styles = StyleSheet.create({
   },
   content: {
     marginTop: 6,
-    marginLeft: 24,
+    marginBottom: 6,
     position: 'absolute', // absolute inside animated view for measurement
     width: '100%',
     
