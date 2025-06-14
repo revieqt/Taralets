@@ -1,8 +1,18 @@
-import { collection, doc, getDoc, setDoc, addDoc, serverTimestamp, updateDoc, arrayUnion } from 'firebase/firestore';
+import {
+  collection,
+  doc,
+  getDoc,
+  setDoc,
+  addDoc,
+  serverTimestamp,
+  updateDoc,
+  arrayUnion,
+} from 'firebase/firestore';
 import { db } from './config'; // Adjust path based on your project structure
 
 const GROUPS_COLLECTION = 'groups';
 const USERS_COLLECTION = 'users';
+const CHATS_COLLECTION = 'chats';
 
 interface CreateGroupParams {
   name?: string;
@@ -33,7 +43,6 @@ export const getGroupById = async (groupId: string): Promise<GroupData | null> =
   return snapshot.exists() ? (snapshot.data() as GroupData) : null;
 };
 
-
 export const addGroupToUserInfo = async (userId: string, groupId: string): Promise<void> => {
   const userRef = doc(db, USERS_COLLECTION, userId);
   await updateDoc(userRef, {
@@ -55,14 +64,19 @@ export const getGroupMembers = async (groupId: string): Promise<any[]> => {
     const userSnap = await getDoc(userRef);
     return userSnap.exists() ? { id: userId, ...userSnap.data() } : null;
   });
+
   console.log('memberIds:', memberIds);
   const members = await Promise.all(memberPromises);
   return members.filter(Boolean);
 };
 
-export const createGroup = async (
-  { name, admin, itinerary, members }: CreateGroupParams
-): Promise<void> => {
+// ✅ UPDATED createGroup
+export const createGroup = async ({
+  name,
+  admin,
+  itinerary,
+  members,
+}: CreateGroupParams): Promise<void> => {
   const groupData: GroupData = {
     name,
     admin,
@@ -74,6 +88,32 @@ export const createGroup = async (
     ...(members && { members }),
   };
 
-  const docRef = await addDoc(collection(db, GROUPS_COLLECTION), groupData);
-  await addGroupToUserInfo(admin, docRef.id);
+  // Create the group document
+  const groupDocRef = await addDoc(collection(db, GROUPS_COLLECTION), groupData);
+  const groupId = groupDocRef.id;
+
+  // Add group ID to user's info
+  await addGroupToUserInfo(admin, groupId);
+
+  // ✅ Create corresponding chat document for group
+  const chatRef = doc(db, CHATS_COLLECTION, groupId);
+  await setDoc(chatRef, {
+    isGroup: true,
+    name: name || 'Group Chat',
+    members: [admin, ...(members || [])],
+    createdAt: serverTimestamp(),
+    lastMessage: null,
+  });
+
+  // (Optional) You can initialize with a welcome message:
+  const welcomeMessage = {
+    text: `Welcome to the group chat ${name || ''}!`,
+    createdAt: serverTimestamp(),
+    senderId: admin,
+    type: 'text',
+    readBy: [admin],
+  };
+
+  const messagesCollection = collection(db, CHATS_COLLECTION, groupId, 'messages');
+  await addDoc(messagesCollection, welcomeMessage);
 };

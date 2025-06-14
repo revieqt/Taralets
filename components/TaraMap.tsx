@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, ViewStyle, StyleProp } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE, Region } from 'react-native-maps';
 
 type TaraMapProps = {
@@ -7,6 +7,7 @@ type TaraMapProps = {
   showMarker?: boolean;
   markerTitle?: string;
   markerDescription?: string;
+  mapStyle?: StyleProp<ViewStyle>;
 };
 
 const TaraMap: React.FC<TaraMapProps> = ({
@@ -14,13 +15,14 @@ const TaraMap: React.FC<TaraMapProps> = ({
   showMarker = true,
   markerTitle = 'You are here',
   markerDescription = 'Current Location',
+  mapStyle
 }) => {
   return (
     <MapView
-      style={styles.map}
+      style={[styles.map, mapStyle]}
       provider={PROVIDER_GOOGLE}
       initialRegion={region}
-      customMapStyle={mapStyle}
+      customMapStyle={mapLayout}
     >
       {showMarker && (
         <Marker
@@ -39,7 +41,7 @@ const TaraMap: React.FC<TaraMapProps> = ({
 export default TaraMap;
 
 // Custom map style: only colors and geometry, all labels are kept
-const mapStyle = [
+const mapLayout = [
     {
         "featureType": "landscape",
         "stylers": [

@@ -122,17 +122,32 @@ export default function RoutesScreen() {
   return (
     <ThemedView style={styles.container}>
       <ThemedView style={styles.titleContainer}>
+        <View style={{flexDirection: 'row'}}>
+          <TouchableOpacity
+            onPress={() => router.replace("/home")}
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+            }}
+          >
+            <AntDesign size={24} name="left" color={"#cccccc"} />
+          </TouchableOpacity>
+          <ThemedText type='subtitle'>Routes</ThemedText>
+        </View>
+
         <TouchableOpacity
-          onPress={() => router.replace("/home")}
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-          }}
-        >
-          <AntDesign size={24} name="left" color={"#cccccc"} />
-        </TouchableOpacity>
-        <ThemedText type='subtitle'>Routes</ThemedText>
+            onPress={() => router.push("/routes/settings")}
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+            }}
+          >
+          <AntDesign size={24} name="setting" color={"#cccccc"} />
+        </TouchableOpacity>    
+        
+        
       </ThemedView>
 
       {/* Tab Switcher */}
@@ -214,6 +229,7 @@ const styles = StyleSheet.create({
     gap: 8,
     marginTop: Platform.OS === 'ios' ? 50 : 20,
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
   tabContainer: {
     flexDirection: 'row',

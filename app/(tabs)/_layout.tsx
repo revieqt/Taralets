@@ -17,39 +17,43 @@ export default function TabLayout() {
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarBackground: TabBarBackground,
+        tabBarShowLabel: false, // Hide tab labels
         tabBarStyle: Platform.select({
           ios: {
             position: 'absolute',
+            paddingHorizontal: 24, // Add horizontal padding
+            paddingBottom: 12,     // Add bottom padding
+            paddingTop: 8,         // Optional: add top padding
           },
-          default: {},
+          default: {
+            paddingHorizontal: 10,
+            paddingBottom: 12,
+            paddingTop: 8,
+          },
         }),
       }}>
       <Tabs.Screen  
         name="home"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <AntDesign size={20} name="home" color={color} />,
+          tabBarIcon: ({ color }) => <AntDesign size={22} name="home" color={color} />,
         }}
       />
       <Tabs.Screen
         name="groups"
         options={{
-          title: 'Groups',
-          tabBarIcon: ({ color }) => <AntDesign size={20} name="team" color={color} />,
+          tabBarIcon: ({ color }) => <AntDesign size={22} name="team" color={color} />,
         }}
       />
       <Tabs.Screen
         name="emergency"
         options={{
-          title: 'Emergency',
-          tabBarIcon: ({ color }) => <AntDesign size={20} name="exclamationcircleo" color={color} />,
+          tabBarIcon: ({ color }) => <AntDesign size={22} name="exclamationcircleo" color={color} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
-          tabBarIcon: ({ color }) => <AntDesign size={20} name="user" color={color} />,
+          tabBarIcon: ({ color }) => <AntDesign size={22} name="user" color={color} />,
         }}
       />
     </Tabs>
