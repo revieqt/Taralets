@@ -180,38 +180,19 @@ export default function HomeScreen() {
             </View>
           </View>
 
-          <View style={styles.infoContainer}>
-            <ThemedText>About</ThemedText>
-            <ThemedText type="subtitle" style={{ marginBottom: 8, fontWeight: 'bold', zIndex: 2 }}>
-              {town}
+          <ThemedView style={styles.taraContainer}>
+            <ThemedText type="subtitle" style={{ fontWeight: 'bold' }}>
+              Talk with Tara!
             </ThemedText>
-            <View style={{ maxHeight: 100, overflow: 'hidden', marginBottom: 4, zIndex: 2 }}>
-              <ThemedText>
-                {wikiLoading ? 'Loading information...' : infoPreview}
-              </ThemedText>
-            </View>
-            <View style={{ flexDirection: 'row', marginTop: 8, justifyContent: 'flex-start', gap: 8, zIndex: 2 }}>
-              <OutlineButton
-                title="Search for Tours"
-                onPress={() => {}}
-                buttonStyle={{ height: 40, paddingHorizontal: 18, width: 'auto', backgroundColor: 'rgba(255,255,255,.7)' }}
-                textStyle={{ fontSize: 14 }}
-              />
-              {isLongInfo && (
-                <OutlineButton
-                  title="See More"
-                  onPress={() => setInfoModalVisible(true)}
-                  buttonStyle={{ height: 40, paddingHorizontal: 18, width: 'auto', backgroundColor: 'rgba(255,255,255,.7)' }}
-                  textStyle={{ fontSize: 14 }}
-                />
-              )}
-            </View>
-          </View>
-
+            <ThemedText>
+              our AI assistant for travel recommendations!
+            </ThemedText>
+          </ThemedView>
+        
           {/* Tourist Attractions Horizontal FlatList */}
           <View style={styles.touristSpotsContainer}>
             <ThemedText type="subtitle" style={{ marginBottom: 8, fontWeight: 'bold' }}>
-              Tourist Attractions
+              Tourist Attractions near you
             </ThemedText>
             {loadingSpots ? (
               <ThemedText>Loading...</ThemedText>
@@ -247,6 +228,40 @@ export default function HomeScreen() {
             )}
           </View>
         </View>
+
+        <LinearGradient
+                colors={['#0065F8', '#00FFDE']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.infoContainer}
+              >
+          <ThemedText style={{color: 'white'}}>About</ThemedText>
+          <ThemedText type="subtitle" style={{color: 'white', marginBottom: 8, fontWeight: 'bold', zIndex: 2 }}>
+            {town}
+          </ThemedText>
+          <View style={{ maxHeight: 100, overflow: 'hidden', marginBottom: 4, zIndex: 2 }}>
+            <ThemedText style={{ color: 'white', textAlign: 'justify' }}>
+              {wikiLoading ? 'Loading information...' : infoPreview}
+            </ThemedText>
+          </View>
+          <View style={{ flexDirection: 'row', marginTop: 8, justifyContent: 'flex-start', gap: 8, zIndex: 2 }}>
+            <OutlineButton
+              title="Search for Tours"
+              onPress={() => {}}
+              buttonStyle={{ borderColor: 'white',height: 40, paddingHorizontal: 18, width: 'auto', backgroundColor: 'rgba(255,255,255,.7)' }}
+              textStyle={{ fontSize: 14 }}
+            />
+            {isLongInfo && (
+              <OutlineButton
+                title="See More"
+                onPress={() => setInfoModalVisible(true)}
+                buttonStyle={{ borderColor: 'white',height: 40, paddingHorizontal: 18, width: 'auto', backgroundColor: 'rgba(255,255,255,.7)' }}
+                textStyle={{ fontSize: 14 }}
+              />
+            )}
+          </View>
+        </LinearGradient>
+
 
         <Portal>
           <Modal
@@ -324,6 +339,8 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 50,
     overflow: 'hidden',
     backgroundColor: '#fff',
+    borderColor: '#ccc',
+    borderWidth: 1,
   },
   expandButton: {
     width: 50,
@@ -383,14 +400,13 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 16,
     marginTop: 10,
-    padding: 16,
-    elevation: 5,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   infoContainer: {
     width: '100%',
-    borderColor: '#ccc',
-    borderWidth: 1,
-    borderRadius: 10,
     padding: 16,
     marginTop: 16,
     overflow: 'hidden',
@@ -398,7 +414,6 @@ const styles = StyleSheet.create({
   },
   touristSpotsContainer: {
     marginTop: 18,
-    marginBottom: 8,
   },
   touristSpotsScroll: {
     flexDirection: 'row',
