@@ -1,4 +1,4 @@
-import { StyleSheet, View, TouchableOpacity, Image, Dimensions } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Image, Dimensions, FlatList } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -8,7 +8,7 @@ import TextField from '@/components/TextField';
 import NotificationModal from '@/components/modals/NotificationModal';
 import FabMenu from '@/components/FabMenu';
 import { AntDesign, MaterialIcons } from '@expo/vector-icons';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSession } from '@/context/SessionContext';
 import { useReverseGeocoding } from '@/hooks/useReverseGeocoding';
 import useUserLocation from '@/hooks/useUserLocation';
@@ -18,10 +18,16 @@ import OutlineButton from '@/components/OutlineButton';
 import { LinearGradient } from 'expo-linear-gradient';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import Animated, { useSharedValue, withTiming, useAnimatedStyle } from 'react-native-reanimated';
+import { wikipediaService } from '@/services/wikipediaService';
 
-const { height: screenHeight} = Dimensions.get('window');
+const { height: screenHeight } = Dimensions.get('window');
 const HEADER_HEIGHT_COLLAPSED = 350;
-const HEADER_HEIGHT_EXPANDED = screenHeight * .95;
+const HEADER_HEIGHT_EXPANDED = screenHeight * 0.95;
+
+type TouristSpot = {
+  title: string;
+  image?: string | null;
+};
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -64,6 +70,35 @@ export default function HomeScreen() {
     backgroundColor: '#fff',
   }));
 
+  // Tourist spots logic
+  const [touristSpots, setTouristSpots] = useState<TouristSpot[]>([]);
+  const [loadingSpots, setLoadingSpots] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function fetchSpots() {
+      if (!town) return;
+      setLoadingSpots(true);
+      try {
+        const titles = await wikipediaService.getTouristSpots(town);
+        // Fetch images for each spot in parallel (limit to 10 for performance)
+        const spots: TouristSpot[] = await Promise.all(
+          titles.slice(0, 10).map(async (title: string) => {
+            const image = await wikipediaService.getImage(title);
+            return { title, image };
+          })
+        );
+        if (isMounted) setTouristSpots(spots);
+      } catch {
+        if (isMounted) setTouristSpots([]);
+      } finally {
+        if (isMounted) setLoadingSpots(false);
+      }
+    }
+    fetchSpots();
+    return () => { isMounted = false; };
+  }, [town]);
+
   return (
     <PaperProvider>
       <ParallaxScrollView
@@ -105,20 +140,19 @@ export default function HomeScreen() {
                   mapStyle={{ flex: 1 }}
                 />
               </TouchableOpacity>
-              
             </Animated.View>
-              <ThemedView type="primary" style={styles.locationShadow}>
-                <ThemedView type='primary' style={styles.locationContainer}>
-                  <ThemedText>You are currently in</ThemedText>
-                  <ThemedText type='subtitle'>
-                    {errorMessage ? errorMessage : locationName}
-                  </ThemedText>
-                </ThemedView>
+            <ThemedView type="primary" style={styles.locationShadow}>
+              <ThemedView type='primary' style={styles.locationContainer}>
+                <ThemedText>You are currently in</ThemedText>
+                <ThemedText type='subtitle'>
+                  {errorMessage ? errorMessage : locationName}
+                </ThemedText>
               </ThemedView>
+            </ThemedView>
           </Animated.View>
         }
       >
-        <View style={{paddingHorizontal: 20}}>
+        <View style={{ paddingHorizontal: 20 }}>
           <View>
             <View style={styles.menuContainer}>
               <TouchableOpacity onPress={() => router.push('/routes/routes')} style={styles.menuButton}>
@@ -146,24 +180,13 @@ export default function HomeScreen() {
             </View>
           </View>
 
-          <ThemedView style={styles.taraContainer}>
-            <ThemedText>dsa</ThemedText>
-          </ThemedView>
-
           <View style={styles.infoContainer}>
-            {wikiImage && (
-              <Image source={{ uri: wikiImage }} style={StyleSheet.absoluteFill} resizeMode="cover" blurRadius={2} />
-            )}
-            <LinearGradient
-              colors={['rgba(0,0,0,0.5)', 'rgba(128,128,128,0.4)', 'rgba(255,255,255,1)']}
-              locations={[0, 0.66, 1]}
-              style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1 }}
-            />
-            <ThemedText type="subtitle" style={{ marginBottom: 8, fontWeight: 'bold', zIndex: 2, color: '#00CAFF' }}>
+            <ThemedText>About</ThemedText>
+            <ThemedText type="subtitle" style={{ marginBottom: 8, fontWeight: 'bold', zIndex: 2 }}>
               {town}
             </ThemedText>
             <View style={{ maxHeight: 100, overflow: 'hidden', marginBottom: 4, zIndex: 2 }}>
-              <ThemedText style={{ color: 'white' }}>
+              <ThemedText>
                 {wikiLoading ? 'Loading information...' : infoPreview}
               </ThemedText>
             </View>
@@ -184,8 +207,46 @@ export default function HomeScreen() {
               )}
             </View>
           </View>
+
+          {/* Tourist Attractions Horizontal FlatList */}
+          <View style={styles.touristSpotsContainer}>
+            <ThemedText type="subtitle" style={{ marginBottom: 8, fontWeight: 'bold' }}>
+              Tourist Attractions
+            </ThemedText>
+            {loadingSpots ? (
+              <ThemedText>Loading...</ThemedText>
+            ) : (
+              <FlatList
+                data={touristSpots}
+                keyExtractor={(item, idx) => item.title + idx}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.touristSpotsScroll}
+                renderItem={({ item }) => (
+                  <View style={styles.spotCard}>
+                    {item.image ? (
+                      <Image
+                        source={{ uri: item.image }}
+                        style={styles.spotImage}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <View style={[styles.spotImage, styles.spotImagePlaceholder]}>
+                        <AntDesign name="picture" size={32} color="#ccc" />
+                      </View>
+                    )}
+                    <ThemedText style={styles.spotTitle} numberOfLines={2}>
+                      {item.title}
+                    </ThemedText>
+                  </View>
+                )}
+                ListEmptyComponent={
+                  <ThemedText style={{ color: '#888' }}>No spots found.</ThemedText>
+                }
+              />
+            )}
+          </View>
         </View>
-        
 
         <Portal>
           <Modal
@@ -200,22 +261,20 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </Modal>
         </Portal>
-
-        
       </ParallaxScrollView>
 
       <FabMenu
-          mainLabel="Create Route"
-          mainIcon={<MaterialIcons name="add" size={32} color="#fff" />}
-          mainOnPress={() => router.push('/routes/create')}
-          actions={[
-            {
-              label: 'Create Itinerary',
-              icon: <MaterialIcons name="playlist-add" size={20} color="#00FFDE" />,
-              onPress: () => router.push('/itineraries/create'),
-            },
-          ]}
-        />
+        mainLabel="Create Route"
+        mainIcon={<MaterialIcons name="add" size={32} color="#fff" />}
+        mainOnPress={() => router.push('/routes/create')}
+        actions={[
+          {
+            label: 'Create Itinerary',
+            icon: <MaterialIcons name="playlist-add" size={20} color="#00FFDE" />,
+            onPress: () => router.push('/itineraries/create'),
+          },
+        ]}
+      />
     </PaperProvider>
   );
 }
@@ -283,15 +342,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     justifyContent: 'center',
     overflow: 'visible',
-
     position: 'absolute',
-                left: 0,
-                right: 0,
-                bottom: 10,
-                zIndex: 20,
-                width: '80%',
-                alignItems: 'center',
-                marginLeft: '10%',
+    left: 0,
+    right: 0,
+    bottom: 10,
+    zIndex: 20,
+    width: '80%',
+    alignItems: 'center',
+    marginLeft: '10%',
   },
   locationContainer: {
     width: '100%',
@@ -330,12 +388,42 @@ const styles = StyleSheet.create({
   },
   infoContainer: {
     width: '100%',
-    backgroundColor: '#f8f8f8',
+    borderColor: '#ccc',
+    borderWidth: 1,
     borderRadius: 10,
     padding: 16,
     marginTop: 16,
     overflow: 'hidden',
-    height: 210,
-    elevation: 10,
+    height: 245,
+  },
+  touristSpotsContainer: {
+    marginTop: 18,
+    marginBottom: 8,
+  },
+  touristSpotsScroll: {
+    flexDirection: 'row',
+    gap: 14,
+    paddingVertical: 4,
+  },
+  spotCard: {
+    borderRadius: 16,
+    minWidth: 120,
+    maxWidth: 140,
+    justifyContent: 'flex-start',
+  },
+  spotImage: {
+    width: '100%',
+    aspectRatio: 1,
+    borderRadius: 5,
+    marginBottom: 8,
+    backgroundColor: '#f0f0f0',
+  },
+  spotImagePlaceholder: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  spotTitle: {
+    fontWeight: 'bold',
+    fontSize: 13,
   },
 });

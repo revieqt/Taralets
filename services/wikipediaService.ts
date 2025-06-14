@@ -39,5 +39,28 @@ export const wikipediaService = {
       console.error("Error fetching Wikipedia image:", error);
       return null;
     }
+  },
+
+  /**
+   * Gets a list of notable tourist spots for a given town.
+   * @param town The town to search for tourist spots.
+   * @returns A promise that resolves to an array of spot titles (strings).
+   */
+  async getTouristSpots(town: string): Promise<string[]> {
+    try {
+      const response = await fetch(
+        `${WIKIPEDIA_API_BASE}&action=query&list=search&srsearch=${encodeURIComponent(
+          town + " tourist attractions"
+        )}&format=json`
+      );
+      const data = await response.json();
+      const results = data.query?.search ?? [];
+      // Return the titles of the top search results
+      return results.map((item: any) => item.title);
+    } catch (error) {
+      console.error("Error fetching tourist spots:", error);
+      return [];
+    }
   }
 };
+
