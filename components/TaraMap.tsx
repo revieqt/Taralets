@@ -1,6 +1,180 @@
 import React from 'react';
-import { StyleSheet, ViewStyle, StyleProp } from 'react-native';
-import MapView, { Marker, PROVIDER_GOOGLE, Region } from 'react-native-maps';
+import { StyleSheet, Image, ViewStyle, StyleProp, View } from 'react-native';
+import MapView, { PROVIDER_GOOGLE, Region } from 'react-native-maps';
+import TaraMarker from './TaraMarker';
+import { useSession } from '@/context/SessionContext';
+import { LinearGradient } from 'expo-linear-gradient';
+
+const mapLayout = [
+    {
+        "featureType": "all",
+        "elementType": "geometry.fill",
+        "stylers": [
+            {
+                "weight": "2.00"
+            }
+        ]
+    },
+    {
+        "featureType": "all",
+        "elementType": "geometry.stroke",
+        "stylers": [
+            {
+                "color": "#9c9c9c"
+            }
+        ]
+    },
+    {
+        "featureType": "all",
+        "elementType": "labels.text",
+        "stylers": [
+            {
+                "visibility": "on"
+            }
+        ]
+    },
+    {
+        "featureType": "landscape",
+        "elementType": "all",
+        "stylers": [
+            {
+                "color": "#f2f2f2"
+            }
+        ]
+    },
+    {
+        "featureType": "landscape",
+        "elementType": "geometry.fill",
+        "stylers": [
+            {
+                "color": "#ffffff"
+            }
+        ]
+    },
+    {
+        "featureType": "landscape.man_made",
+        "elementType": "geometry.fill",
+        "stylers": [
+            {
+                "color": "#ffffff"
+            }
+        ]
+    },
+    {
+        "featureType": "poi",
+        "elementType": "all",
+        "stylers": [
+            {
+                "visibility": "off"
+            }
+        ]
+    },
+    {
+        "featureType": "road",
+        "elementType": "all",
+        "stylers": [
+            {
+                "saturation": -100
+            },
+            {
+                "lightness": 45
+            }
+        ]
+    },
+    {
+        "featureType": "road",
+        "elementType": "geometry.fill",
+        "stylers": [
+            {
+                "color": "#eeeeee"
+            }
+        ]
+    },
+    {
+        "featureType": "road",
+        "elementType": "labels.text.fill",
+        "stylers": [
+            {
+                "color": "#7b7b7b"
+            }
+        ]
+    },
+    {
+        "featureType": "road",
+        "elementType": "labels.text.stroke",
+        "stylers": [
+            {
+                "color": "#ffffff"
+            }
+        ]
+    },
+    {
+        "featureType": "road.highway",
+        "elementType": "all",
+        "stylers": [
+            {
+                "visibility": "simplified"
+            }
+        ]
+    },
+    {
+        "featureType": "road.arterial",
+        "elementType": "labels.icon",
+        "stylers": [
+            {
+                "visibility": "off"
+            }
+        ]
+    },
+    {
+        "featureType": "transit",
+        "elementType": "all",
+        "stylers": [
+            {
+                "visibility": "off"
+            }
+        ]
+    },
+    {
+        "featureType": "water",
+        "elementType": "all",
+        "stylers": [
+            {
+                "color": "#46bcec"
+            },
+            {
+                "visibility": "on"
+            }
+        ]
+    },
+    {
+        "featureType": "water",
+        "elementType": "geometry.fill",
+        "stylers": [
+            {
+                "color": "#b5dae1"
+            }
+        ]
+    },
+    {
+        "featureType": "water",
+        "elementType": "labels.text.fill",
+        "stylers": [
+            {
+                "color": "#070707"
+            }
+        ]
+    },
+    {
+        "featureType": "water",
+        "elementType": "labels.text.stroke",
+        "stylers": [
+            {
+                "color": "#ffffff"
+            }
+        ]
+    }
+]
 
 type TaraMapProps = {
   region: Region;
@@ -15,139 +189,54 @@ const TaraMap: React.FC<TaraMapProps> = ({
   showMarker = true,
   markerTitle = 'You are here',
   markerDescription = 'Current Location',
-  mapStyle
+  mapStyle,
 }) => {
+  const { session } = useSession();
+
   return (
-    <MapView
-      style={[styles.map, mapStyle]}
-      provider={PROVIDER_GOOGLE}
-      initialRegion={region}
-      customMapStyle={mapLayout}
-    >
-      {showMarker && (
-        <Marker
-          coordinate={{
-            latitude: region.latitude,
-            longitude: region.longitude,
-          }}
-          title={markerTitle}
-          description={markerDescription}
-        />
-      )}
-    </MapView>
+    <View style={{ flex: 1 }}>
+      <MapView
+        style={[styles.map, mapStyle]}
+        provider={PROVIDER_GOOGLE}
+        initialRegion={region}
+        customMapStyle={mapLayout}
+      >
+        {showMarker && session && (
+          <TaraMarker
+            coordinate={{
+              latitude: region.latitude,
+              longitude: region.longitude,
+            }}
+            color="#0065F8"
+            icon={session.user?.profileImage}
+          />
+        )}
+      </MapView>
+      {/* Black to transparent fade at the bottom */}
+      <LinearGradient
+        colors={['rgba(0, 255, 222, 0)','rgba(255,255,255,1)' ]}
+        style={styles.bottomFade}
+        pointerEvents="none"
+      />
+    </View>
   );
 };
-
-export default TaraMap;
-
-// Custom map style: only colors and geometry, all labels are kept
-const mapLayout = [
-    {
-        "featureType": "landscape",
-        "stylers": [
-            {
-                "hue": "#FFBB00"
-            },
-            {
-                "saturation": 43.400000000000006
-            },
-            {
-                "lightness": 37.599999999999994
-            },
-            {
-                "gamma": 1
-            }
-        ]
-    },
-    {
-        "featureType": "road.highway",
-        "stylers": [
-            {
-                "hue": "#FFC200"
-            },
-            {
-                "saturation": -61.8
-            },
-            {
-                "lightness": 45.599999999999994
-            },
-            {
-                "gamma": 1
-            }
-        ]
-    },
-    {
-        "featureType": "road.arterial",
-        "stylers": [
-            {
-                "hue": "#FF0300"
-            },
-            {
-                "saturation": -100
-            },
-            {
-                "lightness": 51.19999999999999
-            },
-            {
-                "gamma": 1
-            }
-        ]
-    },
-    {
-        "featureType": "road.local",
-        "stylers": [
-            {
-                "hue": "#FF0300"
-            },
-            {
-                "saturation": -100
-            },
-            {
-                "lightness": 52
-            },
-            {
-                "gamma": 1
-            }
-        ]
-    },
-    {
-        "featureType": "water",
-        "stylers": [
-            {
-                "hue": "#0078FF"
-            },
-            {
-                "saturation": -13.200000000000003
-            },
-            {
-                "lightness": 2.4000000000000057
-            },
-            {
-                "gamma": 1
-            }
-        ]
-    },
-    {
-        "featureType": "poi",
-        "stylers": [
-            {
-                "hue": "#00FF6A"
-            },
-            {
-                "saturation": -1.0989010989011234
-            },
-            {
-                "lightness": 11.200000000000017
-            },
-            {
-                "gamma": 1
-            }
-        ]
-    }
-]
 
 const styles = StyleSheet.create({
   map: {
     flex: 1,
+    borderRadius: 10,
+    overflow: 'hidden',
+  },
+  bottomFade: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: '10%',
+    // If you want a fixed height instead, use: height: 40,
+    zIndex: 10,
   },
 });
+
+export default TaraMap;

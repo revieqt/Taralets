@@ -18,6 +18,11 @@ export const Colors = {
     primary: '#ffffff',
     secondary: '#90D1CA',
     accent: '#90D1CA',
+
+    complimentary1: 'rgba(255, 122, 0, .5)',
+    complimentary2: 'rgba(126, 217, 87, .5)',
+    complimentary3: 'rgba(243, 193, 255, .5)',
+    complimentary4: 'rgba(255, 176, 133, .5)',
   },
   dark: {
     text: '#ECEDEE',
@@ -30,5 +35,11 @@ export const Colors = {
     primary: '#90D1CA',
     secondary: '#90D1CA',
     accent: '#90D1CA',
+
+    complimentary1: '#F2F2F2',
+    complimentary2: '#F8F8F8',
+    complimentary3: '#FDFDFD',
+    complimentary4: '#F5F5F5',
+    
   },
 };

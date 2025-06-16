@@ -35,24 +35,26 @@ export function ThemedText({
 
 const styles = StyleSheet.create({
   default: {
+    fontFamily: 'Roboto',
     fontSize: 14,
     lineHeight: 24,
   },
   defaultSemiBold: {
+    fontFamily: 'Poppins',
     fontSize: 16,
     lineHeight: 24,
-    fontWeight: '600',
   },
   title: {
+    fontFamily: 'PoppinsBold',
     fontSize: 32,
-    fontWeight: 'bold',
-    lineHeight: 32,
+    lineHeight: 38,
   },
   subtitle: {
+    fontFamily: 'PoppinsSemiBold',
     fontSize: 20,
-    fontWeight: 'bold',
   },
   link: {
+    fontFamily: 'Roboto',
     lineHeight: 30,
     fontSize: 16,
     color: '#0a7ea4',

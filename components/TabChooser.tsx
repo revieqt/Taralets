@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, ViewStyle, TextStyle } from 'react-native';
 import OutlineButton from './OutlineButton';
 
@@ -11,6 +11,7 @@ interface TabChooserProps {
   activeButtonStyle?: ViewStyle;
   activeTextStyle?: TextStyle;
   initialIndex?: number;
+  selectedIndex?: number; // <-- Add this line
 }
 
 const TabChooser: React.FC<TabChooserProps> = ({
@@ -22,8 +23,16 @@ const TabChooser: React.FC<TabChooserProps> = ({
   activeButtonStyle,
   activeTextStyle,
   initialIndex = 0,
+  selectedIndex, // <-- Add this line
 }) => {
   const [activeIndex, setActiveIndex] = useState(initialIndex);
+
+  // Sync with controlled selectedIndex
+  useEffect(() => {
+    if (typeof selectedIndex === 'number' && selectedIndex !== activeIndex) {
+      setActiveIndex(selectedIndex);
+    }
+  }, [selectedIndex]);
 
   const handlePress = (index: number) => {
     setActiveIndex(index);
@@ -73,7 +82,7 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: 'transparent',
-    borderColor: '#ccc',
+    borderColor: 'gray',
     borderWidth: 1,
   },
   activeButton: {
@@ -82,7 +91,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
   },
   text: {
-    color: '#ccc',
+    color: 'gray',
   },
   activeText: {
     color: '#fff',

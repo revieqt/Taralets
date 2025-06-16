@@ -21,8 +21,8 @@ import Animated, { useSharedValue, withTiming, useAnimatedStyle } from 'react-na
 import { wikipediaService } from '@/services/wikipediaService';
 
 const { height: screenHeight } = Dimensions.get('window');
-const HEADER_HEIGHT_COLLAPSED = 350;
-const HEADER_HEIGHT_EXPANDED = screenHeight * 0.95;
+const HEADER_HEIGHT_COLLAPSED = 450;
+const HEADER_HEIGHT_EXPANDED = screenHeight + 80;
 
 type TouristSpot = {
   title: string;
@@ -46,29 +46,10 @@ export default function HomeScreen() {
 
   const expanded = useSharedValue(false);
   const headerHeight = useSharedValue(HEADER_HEIGHT_COLLAPSED);
-
-  // mapContainer height is always headerHeight - 50
   const mapHeight = useSharedValue(HEADER_HEIGHT_COLLAPSED - 40);
 
-  const toggleExpand = () => {
-    expanded.value = !expanded.value;
-    const nextHeaderHeight = expanded.value ? HEADER_HEIGHT_EXPANDED : HEADER_HEIGHT_COLLAPSED;
-    headerHeight.value = withTiming(nextHeaderHeight, { duration: 300 });
-    mapHeight.value = withTiming(nextHeaderHeight - 40, { duration: 300 });
-  };
-
-  const animatedHeaderStyle = useAnimatedStyle(() => ({
-    height: headerHeight.value,
-  }));
-
-  const animatedMapContainerStyle = useAnimatedStyle(() => ({
-    height: mapHeight.value,
-    width: '100%',
-    alignSelf: 'center',
-    borderRadius: 10,
-    overflow: 'hidden',
-    backgroundColor: '#fff',
-  }));
+  // React state for toggle button UI
+  const [isExpanded, setIsExpanded] = useState(false);
 
   // Tourist spots logic
   const [touristSpots, setTouristSpots] = useState<TouristSpot[]>([]);
@@ -99,13 +80,35 @@ export default function HomeScreen() {
     return () => { isMounted = false; };
   }, [town]);
 
+  const animatedHeaderStyle = useAnimatedStyle(() => ({
+    height: headerHeight.value,
+  }));
+
+  const animatedMapContainerStyle = useAnimatedStyle(() => ({
+    height: mapHeight.value,
+    width: '100%',
+    alignSelf: 'center',
+    borderRadius: 10,
+    overflow: 'hidden',
+    backgroundColor: '#fff',
+  }));
+
+  // Toggle expand/collapse
+  const handleExpandToggle = () => {
+    const nextExpanded = !isExpanded;
+    setIsExpanded(nextExpanded); // React state for UI
+    expanded.value = nextExpanded; // Reanimated value for animation
+    const nextHeaderHeight = nextExpanded ? HEADER_HEIGHT_EXPANDED : HEADER_HEIGHT_COLLAPSED;
+    headerHeight.value = withTiming(nextHeaderHeight, { duration: 300 });
+    mapHeight.value = withTiming(nextHeaderHeight - 80, { duration: 300 });
+  };
+
   return (
     <PaperProvider>
       <ParallaxScrollView
         headerBackgroundColor={{ light: '#fff', dark: '#000' }}
         headerImage={
           <Animated.View style={[styles.headerContainer, animatedHeaderStyle]}>
-
             <View style={styles.topBarContainer}>
               <View style={styles.textFieldWrapper}>
                 <TextField
@@ -123,75 +126,92 @@ export default function HomeScreen() {
                 <AntDesign name="bells" size={22} color="#fff" />
               </TouchableOpacity>
             </View>
-
-            <Animated.View style={[styles.mapContainer, animatedMapContainerStyle]}>
-              <TouchableOpacity
-                onPress={toggleExpand}
-                activeOpacity={0.8}
-                style={{ flex: 1 }}
-              >
-                <TaraMap
-                  region={{
-                    latitude: userCoordinates.lat || 14.5995,
-                    longitude: userCoordinates.lon || 120.9842,
-                    latitudeDelta: 0.05,
-                    longitudeDelta: 0.05,
-                  }}
-                  mapStyle={{ flex: 1 }}
-                />
-              </TouchableOpacity>
+            <Animated.View style={[styles.mapContainer, animatedMapContainerStyle, { zIndex: 1 }]}>
+              <TaraMap
+                region={{
+                  latitude: userCoordinates.lat || 14.5995,
+                  longitude: userCoordinates.lon || 120.9842,
+                  latitudeDelta: 0.05,
+                  longitudeDelta: 0.05,
+                }}
+                mapStyle={{ flex: 1 }}
+              />
             </Animated.View>
-            <ThemedView type="primary" style={styles.locationShadow}>
-              <ThemedView type='primary' style={styles.locationContainer}>
-                <ThemedText>You are currently in</ThemedText>
+            {/* Map options: Toggle buttons and Location container */}
+            <View style={styles.mapOptions}>
+              {/* Toggle buttons at the top of mapOptions */}
+              <View style={styles.tabChooserContainer}>
+                <TouchableOpacity
+                  style={[
+                    styles.toggleButton,
+                    isExpanded && styles.toggleButtonActive
+                  ]}
+                  onPress={handleExpandToggle}
+                  activeOpacity={0.8}
+                >
+                  <ThemedText style={[styles.toggleButtonText, isExpanded && styles.toggleButtonTextActive]}>
+                    {isExpanded ? 'Collapse' : 'Expand'}
+                  </ThemedText>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.toggleButton}
+                  onPress={() => {/* 3D View action here if needed */}}
+                  activeOpacity={0.8}
+                >
+                  <ThemedText style={styles.toggleButtonText}>3D View</ThemedText>
+                </TouchableOpacity>
+              </View>
+              <ThemedView type="primary" style={[styles.locationContainer, { zIndex: 2 }]}>
+                <ThemedText style={{ color: "gray" }}>You are currently in</ThemedText>
                 <ThemedText type='subtitle'>
                   {errorMessage ? errorMessage : locationName}
                 </ThemedText>
+                <View style={styles.menuContainer}>
+                  <TouchableOpacity onPress={() => router.push('/routes/routes')} style={styles.menuButton}>
+                    <AntDesign name="retweet" size={24} color="#4300FF" />
+                    <ThemedText>Routes</ThemedText>
+                  </TouchableOpacity>
+                  <View style={styles.verticalRule}>
+                    <VerticalRule height="50%" color="#aaa" thickness={1} />
+                  </View>
+                  <TouchableOpacity onPress={() => router.push('/itineraries/itineraries')} style={styles.menuButton}>
+                    <AntDesign name="paperclip" size={24} color="#4300FF" />
+                    <ThemedText>Itineraries</ThemedText>
+                  </TouchableOpacity>
+                  <View style={styles.verticalRule}>
+                    <VerticalRule height="50%" color="#aaa" thickness={1} />
+                  </View>
+                  <TouchableOpacity onPress={() => router.push('/weather')} style={styles.menuButton}>
+                    <AntDesign name="cloudo" size={24} color="#4300FF" />
+                    <ThemedText>Weather</ThemedText>
+                  </TouchableOpacity>
+                </View>
               </ThemedView>
-            </ThemedView>
+            </View>
           </Animated.View>
         }
       >
         <View style={{ paddingHorizontal: 20 }}>
-          <View>
-            <View style={styles.menuContainer}>
-              <TouchableOpacity onPress={() => router.push('/routes/routes')} style={styles.menuButton}>
-                <AntDesign name="retweet" size={24} color="black" />
-                <ThemedText>Routes</ThemedText>
-              </TouchableOpacity>
-
-              <View style={styles.verticalRule}>
-                <VerticalRule height="50%" color="#aaa" thickness={1} />
-              </View>
-
-              <TouchableOpacity onPress={() => router.push('/itineraries/itineraries')} style={styles.menuButton}>
-                <AntDesign name="paperclip" size={24} color="black" />
-                <ThemedText>Itineraries</ThemedText>
-              </TouchableOpacity>
-
-              <View style={styles.verticalRule}>
-                <VerticalRule height="50%" color="#aaa" thickness={1} />
-              </View>
-
-              <TouchableOpacity onPress={() => router.push('/weather')} style={styles.menuButton}>
-                <AntDesign name="cloudo" size={24} color="black" />
-                <ThemedText>Weather</ThemedText>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          <ThemedView style={styles.taraContainer}>
-            <ThemedText type="subtitle" style={{ fontWeight: 'bold' }}>
-              Talk with Tara!
-            </ThemedText>
-            <ThemedText>
-              our AI assistant for travel recommendations!
-            </ThemedText>
+          <ThemedView style={styles.optionsContainer}>
+            <ThemedView type='complimentary1' style={styles.optionsButton}>
+              <ThemedText>Button ni soon</ThemedText>
+            </ThemedView>
+            <ThemedView type='complimentary2' style={styles.optionsButton}>
+              <ThemedText>Button ni soon</ThemedText>
+            </ThemedView>
+            <ThemedView type='complimentary3' style={styles.optionsButton}>
+              <ThemedText>Button ni soon</ThemedText>
+            </ThemedView>
+            <ThemedView type='complimentary4' style={styles.optionsButton}>
+              <ThemedText>Button ni soon</ThemedText>
+            </ThemedView>
           </ThemedView>
-        
+
+
+
           {/* Tourist Attractions Horizontal FlatList */}
           <View style={styles.touristSpotsContainer}>
-            <ThemedText type="subtitle" style={{ marginBottom: 8, fontWeight: 'bold' }}>
+            <ThemedText type="subtitle" style={{ marginBottom: 8, fontSize: 18}}>
               Tourist Attractions near you
             </ThemedText>
             {loadingSpots ? (
@@ -204,7 +224,7 @@ export default function HomeScreen() {
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.touristSpotsScroll}
                 renderItem={({ item }) => (
-                  <View style={styles.spotCard}>
+                  <Animated.View style={styles.spotCard}>
                     {item.image ? (
                       <Image
                         source={{ uri: item.image }}
@@ -219,7 +239,7 @@ export default function HomeScreen() {
                     <ThemedText style={styles.spotTitle} numberOfLines={2}>
                       {item.title}
                     </ThemedText>
-                  </View>
+                  </Animated.View>
                 )}
                 ListEmptyComponent={
                   <ThemedText style={{ color: '#888' }}>No spots found.</ThemedText>
@@ -228,15 +248,14 @@ export default function HomeScreen() {
             )}
           </View>
         </View>
-
         <LinearGradient
-                colors={['#0065F8', '#00FFDE']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.infoContainer}
-              >
-          <ThemedText style={{color: 'white'}}>About</ThemedText>
-          <ThemedText type="subtitle" style={{color: 'white', marginBottom: 8, fontWeight: 'bold', zIndex: 2 }}>
+          colors={['#0065F8', '#00FFDE']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.infoContainer}
+        >
+          <ThemedText style={{ color: 'white' }}>About</ThemedText>
+          <ThemedText type="subtitle" style={{ color: 'white', marginBottom: 8, fontWeight: 'bold', zIndex: 2 }}>
             {town}
           </ThemedText>
           <View style={{ maxHeight: 100, overflow: 'hidden', marginBottom: 4, zIndex: 2 }}>
@@ -248,21 +267,19 @@ export default function HomeScreen() {
             <OutlineButton
               title="Search for Tours"
               onPress={() => {}}
-              buttonStyle={{ borderColor: 'white',height: 40, paddingHorizontal: 18, width: 'auto', backgroundColor: 'rgba(255,255,255,.7)' }}
+              buttonStyle={{ borderColor: 'white', height: 40, paddingHorizontal: 18, width: 'auto', backgroundColor: 'rgba(255,255,255,.7)' }}
               textStyle={{ fontSize: 14 }}
             />
             {isLongInfo && (
               <OutlineButton
                 title="See More"
                 onPress={() => setInfoModalVisible(true)}
-                buttonStyle={{ borderColor: 'white',height: 40, paddingHorizontal: 18, width: 'auto', backgroundColor: 'rgba(255,255,255,.7)' }}
+                buttonStyle={{ borderColor: 'white', height: 40, paddingHorizontal: 18, width: 'auto', backgroundColor: 'rgba(255,255,255,.7)' }}
                 textStyle={{ fontSize: 14 }}
               />
             )}
           </View>
         </LinearGradient>
-
-
         <Portal>
           <Modal
             visible={infoModalVisible}
@@ -277,7 +294,6 @@ export default function HomeScreen() {
           </Modal>
         </Portal>
       </ParallaxScrollView>
-
       <FabMenu
         mainLabel="Create Route"
         mainIcon={<MaterialIcons name="add" size={32} color="#fff" />}
@@ -304,6 +320,50 @@ const styles = StyleSheet.create({
     zIndex: 100,
     position: 'absolute',
     justifyContent: 'center',
+  },
+  mapOptions: {
+    alignSelf: 'center',
+    justifyContent: 'flex-start',
+    overflow: 'visible',
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 10,
+    zIndex: 20,
+    width: '80%',
+    alignItems: 'center',
+    marginLeft: '10%',
+    paddingTop: 0,
+  },
+  tabChooserContainer: {
+    width: '100%',
+    alignItems: 'flex-end',
+    marginBottom: 8,
+    zIndex: 10,
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  toggleButton: {
+    minWidth: 80,
+    borderRadius: 16,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    backgroundColor: 'transparent',
+    borderColor: 'gray',
+    borderWidth: 1,
+    marginLeft: 8,
+    alignItems: 'center',
+  },
+  toggleButtonActive: {
+    backgroundColor: '#00CAFF',
+    borderColor: '#00CAFF',
+  },
+  toggleButtonText: {
+    fontSize: 13,
+    color: '#333',
+  },
+  toggleButtonTextActive: {
+    color: '#fff',
   },
   textFieldWrapper: {
     flex: 1,
@@ -335,12 +395,8 @@ const styles = StyleSheet.create({
   mapContainer: {
     width: '90%',
     alignSelf: 'center',
-    borderBottomLeftRadius: 50,
-    borderBottomRightRadius: 50,
     overflow: 'hidden',
     backgroundColor: '#fff',
-    borderColor: '#ccc',
-    borderWidth: 1,
   },
   expandButton: {
     width: 50,
@@ -350,61 +406,55 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.3)',
   },
-  locationShadow: {
-    height: 50,
-    borderTopLeftRadius: 15,
-    borderTopRightRadius: 15,
-    elevation: 10,
+  locationContainer: {
+    paddingVertical: 16,
+    borderRadius: 15,
+    elevation: 5,
     alignSelf: 'center',
     backgroundColor: '#fff',
     justifyContent: 'center',
     overflow: 'visible',
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 10,
-    zIndex: 20,
-    width: '80%',
-    alignItems: 'center',
-    marginLeft: '10%',
-  },
-  locationContainer: {
     width: '100%',
-    height: 90,
-    borderTopLeftRadius: 15,
-    borderTopRightRadius: 15,
-    padding: 14,
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#fff',
   },
   menuContainer: {
     width: '100%',
-    height: 80,
+    height: 75,
     flexDirection: 'row',
     justifyContent: 'center',
     marginTop: 10,
     gap: 2,
   },
   menuButton: {
-    width: '26%',
+    width: '24%',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 5,
+    backgroundColor: 'rgba(0, 255, 222, .3)',
+    borderRadius: 16,
+    aspectRatio: 1,
   },
   verticalRule: {
     alignSelf: 'center',
   },
-  taraContainer: {
-    width: '100%',
-    height: 100,
-    borderRadius: 16,
-    marginTop: 10,
-    borderColor: '#ccc',
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  optionsContainer: {
+  width: '100%',
+  minHeight: 100,
+  borderRadius: 16,
+  marginTop: 10,
+  alignItems: 'center',
+  flexDirection: 'row', // add this
+  flexWrap: 'wrap',     // add this
+  justifyContent: 'center', // distribute space evenly
+  gap: 10, // add some space between buttons
+  paddingVertical: 10, // add horizontal margin
+},
+optionsButton: {
+  flexBasis: '47%',     // about 2 per row with some gap
+  height: 70,
+  borderRadius: 15,
+  alignItems: 'center',
+  justifyContent: 'center',
+},
   infoContainer: {
     width: '100%',
     padding: 16,
