@@ -22,6 +22,7 @@ export type User = {
 
 // 📍 ActiveRoute type
 export type ActiveRoute = {
+  routeID: string;
   userID: string;
   location: { latitude: number; longitude: number }[];
   status: string;

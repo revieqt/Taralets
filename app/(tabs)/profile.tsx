@@ -10,7 +10,7 @@ import { Collapsible } from '@/components/Collapsible';
 import GradientButton from '@/components/GradientButton';
 import PasswordField from '@/components/PasswordField';
 import OutlineButton from '@/components/OutlineButton';
-import { LinearGradient } from 'expo-linear-gradient';
+import ThemedIcons from '@/components/ThemedIcons';
 import * as ImagePicker from 'expo-image-picker';
 import { useSession } from '@/context/SessionContext';
 import VerticalRule from '@/components/VerticalRule';
@@ -296,7 +296,7 @@ const Profile = () => {
 
             <TouchableOpacity onPress={() => setModalVisible(true)}>
               <ThemedView style={styles.collapsibleChild} >
-                <ThemedText >Change Password</ThemedText>
+                <ThemedIcons library='MaterialIcons' name='vpn-key' size={15}/><ThemedText>Change Password</ThemedText>
               </ThemedView>
             </TouchableOpacity>
           </Collapsible>
@@ -306,20 +306,20 @@ const Profile = () => {
             <View>
               <TouchableOpacity onPress={() => router.push('/tourGuideApplication')}>
                 <ThemedView style={styles.collapsibleChild} >
-                  <ThemedText >View Tour Guide Information</ThemedText>
+                  <ThemedIcons library='MaterialIcons' name='tour' size={15}/><ThemedText >View Tour Guide Information</ThemedText>
                 </ThemedView>
               </TouchableOpacity>
 
               <TouchableOpacity onPress={() => router.push('/tourGuideApplication')}>
                 <ThemedView style={styles.collapsibleChild} >
-                  <ThemedText >Manage Tours</ThemedText>
+                  <ThemedIcons library='MaterialIcons' name='tour' size={15}/><ThemedText >Manage Tours</ThemedText>
                 </ThemedView>
               </TouchableOpacity>
             </View>
             :
             <TouchableOpacity onPress={() => router.push('/tourGuideApplication')}>
               <ThemedView style={styles.collapsibleChild} >
-                <ThemedText >Apply as Tour Guide</ThemedText>
+                <ThemedIcons library='MaterialIcons' name='tour' size={15}/><ThemedText >Apply as Tour Guide</ThemedText>
               </ThemedView>
             </TouchableOpacity>
           }
@@ -329,19 +329,19 @@ const Profile = () => {
           <Collapsible title="Help and Support">
             <TouchableOpacity>
               <ThemedView style={styles.collapsibleChild}>
-                <ThemedText >App Manual</ThemedText>
+                <ThemedIcons library='FontAwesome' name='file-text' size={15}/><ThemedText >App Manual</ThemedText>
               </ThemedView>
             </TouchableOpacity>
             
             <TouchableOpacity>
               <ThemedView style={styles.collapsibleChild}>
-                <ThemedText >Terms and Conditions</ThemedText>
+                <ThemedIcons library='FontAwesome' name='paste' size={15}/><ThemedText >Terms and Conditions</ThemedText>
               </ThemedView>
             </TouchableOpacity>
             
             <TouchableOpacity>
               <ThemedView style={styles.collapsibleChild}>
-                <ThemedText >Contact Support</ThemedText>
+                <ThemedIcons library='MaterialIcons' name='contact-support' size={15}/><ThemedText >Contact Support</ThemedText>
               </ThemedView>
             </TouchableOpacity>
           </Collapsible>
@@ -521,6 +521,10 @@ const styles = StyleSheet.create({
     padding: 10,
     fontSize: 15,
     width: '100%',
+    flexDirection: 'row',
+    gap: 10,
+    alignItems: 'center',
+    
     },
   logoutContainer: {
     margin:15,

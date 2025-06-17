@@ -19,6 +19,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import Animated, { useSharedValue, withTiming, useAnimatedStyle } from 'react-native-reanimated';
 import { wikipediaService } from '@/services/wikipediaService';
+import LiveTrackingMap from '@/components/maps/LiveTrackingMap';
 
 const { height: screenHeight } = Dimensions.get('window');
 const HEADER_HEIGHT_COLLAPSED = 450;
@@ -50,6 +51,9 @@ export default function HomeScreen() {
 
   // React state for toggle button UI
   const [isExpanded, setIsExpanded] = useState(false);
+
+  // 3D View toggle state
+  const [is3DView, setIs3DView] = useState(false);
 
   // Tourist spots logic
   const [touristSpots, setTouristSpots] = useState<TouristSpot[]>([]);
@@ -103,6 +107,10 @@ export default function HomeScreen() {
     mapHeight.value = withTiming(nextHeaderHeight - 80, { duration: 300 });
   };
 
+  // --- CONDITIONAL MAP RENDERING ---
+  const showLiveTracking = !!session?.activeRoute;
+  console.log('Live tracking enabled:', session?.activeRoute);
+
   return (
     <PaperProvider>
       <ParallaxScrollView
@@ -127,15 +135,19 @@ export default function HomeScreen() {
               </TouchableOpacity>
             </View>
             <Animated.View style={[styles.mapContainer, animatedMapContainerStyle, { zIndex: 1 }]}>
-              <TaraMap
-                region={{
-                  latitude: userCoordinates.lat || 14.5995,
-                  longitude: userCoordinates.lon || 120.9842,
-                  latitudeDelta: 0.05,
-                  longitudeDelta: 0.05,
-                }}
-                mapStyle={{ flex: 1 }}
-              />
+              {showLiveTracking ? (
+                <LiveTrackingMap routeId={session?.activeRoute?.routeID} is3D={is3DView} />
+              ) : (
+                <TaraMap
+                  region={{
+                    latitude: userCoordinates.lat || 14.5995,
+                    longitude: userCoordinates.lon || 120.9842,
+                    latitudeDelta: 0.05,
+                    longitudeDelta: 0.05,
+                  }}
+                  mapStyle={{ flex: 1 }}
+                />
+              )}
             </Animated.View>
             {/* Map options: Toggle buttons and Location container */}
             <View style={styles.mapOptions}>
@@ -154,11 +166,16 @@ export default function HomeScreen() {
                   </ThemedText>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={styles.toggleButton}
-                  onPress={() => {/* 3D View action here if needed */}}
+                  style={[
+                    styles.toggleButton,
+                    is3DView && styles.toggleButtonActive
+                  ]}
+                  onPress={() => setIs3DView((prev) => !prev)}
                   activeOpacity={0.8}
                 >
-                  <ThemedText style={styles.toggleButtonText}>3D View</ThemedText>
+                  <ThemedText style={[styles.toggleButtonText, is3DView && styles.toggleButtonTextActive]}>
+                    3D View
+                  </ThemedText>
                 </TouchableOpacity>
               </View>
               <ThemedView type="primary" style={[styles.locationContainer, { zIndex: 2 }]}>
@@ -194,10 +211,12 @@ export default function HomeScreen() {
         <View style={{ paddingHorizontal: 20 }}>
           <ThemedView style={styles.optionsContainer}>
             <ThemedView type='complimentary1' style={styles.optionsButton}>
-              <ThemedText>Button ni soon</ThemedText>
+              <ThemedText style={{fontSize: 13, fontWeight: 'bold'}}>Chat with Tara!</ThemedText>
+              <ThemedText style={{fontSize: 11}}>you AI Travel Companion</ThemedText>
             </ThemedView>
             <ThemedView type='complimentary2' style={styles.optionsButton}>
-              <ThemedText>Button ni soon</ThemedText>
+              <ThemedText style={{fontSize: 13, fontWeight: 'bold'}}>Travel History</ThemedText>
+              <ThemedText style={{fontSize: 11}}>your past travels</ThemedText>
             </ThemedView>
             <ThemedView type='complimentary3' style={styles.optionsButton}>
               <ThemedText>Button ni soon</ThemedText>
@@ -206,8 +225,6 @@ export default function HomeScreen() {
               <ThemedText>Button ni soon</ThemedText>
             </ThemedView>
           </ThemedView>
-
-
 
           {/* Tourist Attractions Horizontal FlatList */}
           <View style={styles.touristSpotsContainer}>
@@ -348,7 +365,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(255,255,255,0.7)',
     borderColor: 'gray',
     borderWidth: 1,
     marginLeft: 8,
@@ -371,7 +388,7 @@ const styles = StyleSheet.create({
   },
   translucentTextField: {
     backgroundColor: 'rgba(255,255,255,0.7)',
-    borderColor: '#ccc',
+    borderColor: 'gray',
     borderWidth: 1,
   },
   notifButton: {
@@ -379,7 +396,7 @@ const styles = StyleSheet.create({
     height: 45,
     borderRadius: 22,
     backgroundColor: 'rgba(255,255,255,0.7)',
-    borderColor: '#ccc',
+    borderColor: 'gray',
     borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',
@@ -411,7 +428,6 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     elevation: 5,
     alignSelf: 'center',
-    backgroundColor: '#fff',
     justifyContent: 'center',
     overflow: 'visible',
     width: '100%',
@@ -437,24 +453,25 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   optionsContainer: {
-  width: '100%',
-  minHeight: 100,
-  borderRadius: 16,
-  marginTop: 10,
-  alignItems: 'center',
-  flexDirection: 'row', // add this
-  flexWrap: 'wrap',     // add this
-  justifyContent: 'center', // distribute space evenly
-  gap: 10, // add some space between buttons
-  paddingVertical: 10, // add horizontal margin
-},
-optionsButton: {
-  flexBasis: '47%',     // about 2 per row with some gap
-  height: 70,
-  borderRadius: 15,
-  alignItems: 'center',
-  justifyContent: 'center',
-},
+    width: '100%',
+    minHeight: 100,
+    borderRadius: 16,
+    marginTop: 10,
+    alignItems: 'center',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 10,
+    paddingVertical: 15,
+  },
+  optionsButton: {
+    flexBasis: '47%',
+    height: 70,
+    borderRadius: 15,
+    padding: 10,
+    alignContent: 'center',
+    justifyContent: 'center',
+  },
   infoContainer: {
     width: '100%',
     padding: 16,

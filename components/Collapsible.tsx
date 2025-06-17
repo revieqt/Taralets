@@ -11,7 +11,6 @@ import {
 } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -42,7 +41,7 @@ export function Collapsible({ children, title }: PropsWithChildren & { title: st
   });
 
   return (
-    <ThemedView>
+    <ThemedView style={styles.container}>
       <TouchableOpacity
         style={styles.heading}
         onPress={() => setIsOpen((value) => !value)}
@@ -64,19 +63,27 @@ export function Collapsible({ children, title }: PropsWithChildren & { title: st
 }
 
 const styles = StyleSheet.create({
+  container: {
+    width: '100%',
+    borderRadius: 8,
+    borderColor: '#ccc',
+    borderWidth: 1,
+  },
   heading: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    borderBottomColor: '#ccc',
+    borderBottomWidth: 1,
+    padding: 10,
   },
   animatedContainer: {
     overflow: 'hidden',
   },
   content: {
     marginTop: 6,
-    marginBottom: 6,
     position: 'absolute', // absolute inside animated view for measurement
     width: '100%',
-    
+    paddingBottom: 13,
   },
 });

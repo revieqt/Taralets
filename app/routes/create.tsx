@@ -169,6 +169,7 @@ export default function CreateRouteScreen() {
         // Save to session as activeRoute
         await updateSession({
           activeRoute: {
+            routeID: docRef.id,
             userID: user.uid,
             location: locationsWithNames,
             status: 'active',

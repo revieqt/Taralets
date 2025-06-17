@@ -1,8 +1,7 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
-import { Platform, View } from 'react-native';
+import { Platform, View, Text } from 'react-native';
 import AntDesign from '@expo/vector-icons/AntDesign';
-import { HapticTab } from '@/components/HapticTab';
 import TabBarBackground from '@/components/ui/TabBarBackground';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
@@ -15,14 +14,29 @@ function TabBarIconWithTopBorder({ name, color, focused, activeColor }: { name: 
       justifyContent: 'center',
       borderTopWidth: 3,
       borderTopColor: focused ? activeColor : 'transparent',
-      paddingTop: 8,
+      paddingTop: 3,
       paddingHorizontal: 8,
-      height: 38, // adjust for your tab bar height
-      width: 38, // adjust for your tab bar width
+      height: 38,
+      width: 38,
       marginTop: 8,
     }}>
-      <AntDesign size={22} name={name} color={color} />
+      <AntDesign size={20} name={name} color={color} />
     </View>
+  );
+}
+
+// Custom label to move the title down a bit
+function TabBarLabel({ children, color }: { children: React.ReactNode, color: string }) {
+  return (
+    <Text style={{
+      fontFamily: 'Roboto',
+      fontSize: 11,
+      color,
+      marginTop: 5, // Move the label down
+      textAlign: 'center',
+    }}>
+      {children}
+    </Text>
   );
 }
 
@@ -35,26 +49,28 @@ export default function TabLayout() {
       screenOptions={{
         tabBarActiveTintColor: activeColor,
         headerShown: false,
-        tabBarButton: HapticTab,
         tabBarBackground: TabBarBackground,
-        tabBarShowLabel: false,
+        tabBarShowLabel: true,
+        tabBarLabel: ({ children, color }) => <TabBarLabel color={color}>{children}</TabBarLabel>,
         tabBarStyle: Platform.select({
           ios: {
             position: 'absolute',
             paddingHorizontal: 24,
             paddingBottom: 12,
             paddingTop: 8,
+            height: 60,
           },
           default: {
             paddingHorizontal: 10,
             paddingBottom: 12,
-            height: 55,
+            height: 60,
           },
         }),
       }}>
       <Tabs.Screen  
         name="home"
         options={{
+          title: "Home",
           tabBarIcon: ({ color, focused }) => (
             <TabBarIconWithTopBorder
               name="home"
@@ -68,6 +84,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="groups"
         options={{
+          title: "Groups",
           tabBarIcon: ({ color, focused }) => (
             <TabBarIconWithTopBorder
               name="team"
@@ -81,6 +98,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="emergency"
         options={{
+          title: "Emergency",
           tabBarIcon: ({ color, focused }) => (
             <TabBarIconWithTopBorder
               name="exclamationcircleo"
@@ -94,6 +112,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="profile"
         options={{
+          title: "Profile",
           tabBarIcon: ({ color, focused }) => (
             <TabBarIconWithTopBorder
               name="user"

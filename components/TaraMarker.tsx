@@ -9,19 +9,21 @@ interface TaraMarkerProps {
   };
   color?: string; // default = #0065F8
   icon?: string; // optional URL or local path to profile photo
-  label?: string; // optional label
+  label?: string; // optional label or number
 }
 
 const TaraMarker: React.FC<TaraMarkerProps> = ({ coordinate, color = '#0065F8', icon, label }) => {
   return (
     <Marker coordinate={coordinate}>
-      <View style={[styles.markerContainer, { borderColor: color }]}>
-        {icon ? (
-          <Image source={{ uri: icon }} style={styles.icon} />
-        ) : (
-          <View style={[styles.dot, { backgroundColor: color }]} />
-        )}
-        {label && <Text style={styles.label}>{label}</Text>}
+      <View style={styles.container}>
+        <View style={[styles.circle, { borderColor: color }]}>
+          {icon ? (
+            <Image source={{ uri: icon }} style={styles.icon} />
+          ) : (
+            <Text style={[styles.label, { color }]}>{label}</Text>
+          )}
+        </View>
+        <View style={[styles.pin, { backgroundColor: color }]} />
       </View>
     </Marker>
   );
@@ -30,33 +32,40 @@ const TaraMarker: React.FC<TaraMarkerProps> = ({ coordinate, color = '#0065F8', 
 export default TaraMarker;
 
 const styles = StyleSheet.create({
-  markerContainer: {
+  container: {
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 1,
-    borderWidth: 2,
-    borderRadius: 30,
-    backgroundColor: 'white',
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 5,
   },
-  dot: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
+  circle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 3,
+    backgroundColor: 'white',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 2,
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 3,
   },
   icon: {
-    width: 30,
-    height: 30,
-    borderRadius: 30,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
   },
   label: {
-    marginTop: 2,
-    fontSize: 10,
-    color: '#333',
-    fontWeight: '600',
+    fontWeight: 'bold',
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  pin: {
+    width: 4,
+    height: 14,
+    borderRadius: 2,
+    marginTop: -2,
+    zIndex: 1,
   },
 });

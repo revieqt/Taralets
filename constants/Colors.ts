@@ -8,7 +8,7 @@ const tintColorDark = '#fff';
 
 export const Colors = {
   light: {
-    text: '#11181C',
+    text: '#37404F',
     background: '#ffffff',
     tint: tintColorLight,
     icon: '#687076', 
@@ -19,20 +19,20 @@ export const Colors = {
     secondary: '#90D1CA',
     accent: '#90D1CA',
 
-    complimentary1: 'rgba(255, 122, 0, .5)',
-    complimentary2: 'rgba(126, 217, 87, .5)',
-    complimentary3: 'rgba(243, 193, 255, .5)',
-    complimentary4: 'rgba(255, 176, 133, .5)',
+    complimentary1: 'rgba(255, 122, 0, .3)',
+    complimentary2: 'rgba(126, 217, 87, .3)',
+    complimentary3: 'rgba(243, 193, 255, .3)',
+    complimentary4: 'rgba(255, 176, 133, .3)',
   },
   dark: {
     text: '#ECEDEE',
-    background: '#151718',
+    background: '#202531',
     tint: tintColorDark,
     icon: '#9BA1A6',
     tabIconDefault: '#9BA1A6',
     tabIconSelected: tintColorDark,
 
-    primary: '#90D1CA',
+    primary: '#37404F',
     secondary: '#90D1CA',
     accent: '#90D1CA',
 
