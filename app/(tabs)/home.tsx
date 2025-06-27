@@ -178,7 +178,7 @@ export default function HomeScreen() {
                   </ThemedText>
                 </TouchableOpacity>
               </View>
-              <ThemedView type="primary" style={[styles.locationContainer, { zIndex: 2 }]}>
+              <ThemedView color="primary" style={[styles.locationContainer, { zIndex: 2 }]}>
                 <ThemedText style={{ color: "gray" }}>You are currently in</ThemedText>
                 <ThemedText type='subtitle'>
                   {errorMessage ? errorMessage : locationName}
@@ -210,18 +210,21 @@ export default function HomeScreen() {
       >
         <View style={{ paddingHorizontal: 20 }}>
           <ThemedView style={styles.optionsContainer}>
-            <ThemedView type='complimentary1' style={styles.optionsButton}>
-              <ThemedText style={{fontSize: 13, fontWeight: 'bold'}}>Chat with Tara!</ThemedText>
-              <ThemedText style={{fontSize: 11}}>you AI Travel Companion</ThemedText>
+            <ThemedView color='complimentary1' roundness={15} style={styles.optionsButton}>
+              <TouchableOpacity onPress={() => router.push('/home/aiChat')}>
+                <ThemedText style={{fontSize: 13, fontWeight: 'bold'}}>Chat with Tara!</ThemedText>
+                <ThemedText style={{fontSize: 11}}>you AI Travel Companion</ThemedText>
+              </TouchableOpacity>
+              
             </ThemedView>
-            <ThemedView type='complimentary2' style={styles.optionsButton}>
+            <ThemedView color='complimentary2' roundness={15} style={styles.optionsButton}>
               <ThemedText style={{fontSize: 13, fontWeight: 'bold'}}>Travel History</ThemedText>
               <ThemedText style={{fontSize: 11}}>your past travels</ThemedText>
             </ThemedView>
-            <ThemedView type='complimentary3' style={styles.optionsButton}>
+            <ThemedView color='complimentary3' roundness={15} style={styles.optionsButton}>
               <ThemedText>Button ni soon</ThemedText>
             </ThemedView>
-            <ThemedView type='complimentary4' style={styles.optionsButton}>
+            <ThemedView color='complimentary4' roundness={15} style={styles.optionsButton}>
               <ThemedText>Button ni soon</ThemedText>
             </ThemedView>
           </ThemedView>
@@ -467,7 +470,6 @@ const styles = StyleSheet.create({
   optionsButton: {
     flexBasis: '47%',
     height: 70,
-    borderRadius: 15,
     padding: 10,
     alignContent: 'center',
     justifyContent: 'center',

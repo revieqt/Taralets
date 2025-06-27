@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, TextInput, StyleSheet, TouchableOpacity, Animated, Platform } from 'react-native';
+import { View, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeColor } from '@/hooks/useThemeColor';
 
@@ -28,17 +28,6 @@ const PasswordField: React.FC<PasswordFieldProps> = ({
   const [isFocused, setIsFocused] = useState(false);
   const focused = isFocusedProp !== undefined ? isFocusedProp : isFocused;
 
-  // Animated value for floating label
-  const [animated] = useState(new Animated.Value(value ? 1 : 0));
-
-  React.useEffect(() => {
-    Animated.timing(animated, {
-      toValue: focused || value ? 1 : 0,
-      duration: 180,
-      useNativeDriver: false,
-    }).start();
-  }, [focused, value]);
-
   const handleFocus = () => {
     setIsFocused(true);
     onFocus && onFocus();
@@ -49,25 +38,6 @@ const PasswordField: React.FC<PasswordFieldProps> = ({
     onBlur && onBlur();
   };
 
-  const labelStyle = {
-    position: 'absolute' as const,
-    left: 20,
-    top: animated.interpolate({
-      inputRange: [-0.3, 1],
-      outputRange: [18, -10],
-    }),
-    fontSize: animated.interpolate({
-      inputRange: [0, 1],
-      outputRange: [16, 12],
-    }),
-    color: animated.interpolate({
-      inputRange: [0, 1],
-      outputRange: ['#aaa', borderColor],
-    }),
-    backgroundColor: backgroundColor,
-    zIndex: 2,
-  };
-
   return (
     <View
       style={[
@@ -76,7 +46,6 @@ const PasswordField: React.FC<PasswordFieldProps> = ({
         { borderColor: focused ? borderColor : '#cccccc', borderWidth: 1 },
       ]}
     >
-      <Animated.Text style={labelStyle}>{placeholder}</Animated.Text>
       <TextInput
         secureTextEntry={!isPasswordVisible}
         style={[
@@ -85,7 +54,7 @@ const PasswordField: React.FC<PasswordFieldProps> = ({
         ]}
         value={value}
         onChangeText={onChangeText}
-        placeholder={focused ? '' : placeholder}
+        placeholder={placeholder}
         placeholderTextColor={useThemeColor({ light: '#aaa', dark: '#888' }, 'icon')}
         onFocus={handleFocus}
         onBlur={handleBlur}
@@ -111,7 +80,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingLeft: 16,
     paddingRight: 16,
-    borderRadius: 25,
+    borderRadius: 15,
     marginBottom: 15,
     borderWidth: 1,
     position: 'relative',

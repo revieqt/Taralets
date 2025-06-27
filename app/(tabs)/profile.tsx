@@ -524,7 +524,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 10,
     alignItems: 'center',
-    
+    overflow: 'hidden',
     },
   logoutContainer: {
     margin:15,

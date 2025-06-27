@@ -7,7 +7,7 @@ import SOSButton from '@/components/SOSButton';
 export default function EmergencyScreen() {
   return (
     <ThemedView style={Platform.OS === 'ios' ? {padding: 16, paddingTop: 0, alignItems:'center'} : {padding: 16, paddingTop: 25 ,alignItems:'center'}}>
-      <ThemedView type='secondary' style={styles.mapContainer}>
+      <ThemedView color='secondary' style={styles.mapContainer}>
         {/* map chuchu diri */}
       </ThemedView>
       <SOSButton style={styles.emergencyButton}>

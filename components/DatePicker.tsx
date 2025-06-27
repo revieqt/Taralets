@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, TextInput, StyleSheet, TouchableOpacity, Platform, Animated } from 'react-native';
+import { View, TextInput, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useThemeColor } from '@/hooks/useThemeColor';
@@ -33,17 +33,6 @@ const DatePicker: React.FC<DatePickerProps> = ({
   const [isFocused, setIsFocused] = useState(false);
   const focused = isFocusedProp !== undefined ? isFocusedProp : isFocused;
 
-  // Animated value for floating label
-  const [animated] = useState(new Animated.Value(value ? 1 : 0));
-
-  React.useEffect(() => {
-    Animated.timing(animated, {
-      toValue: focused || value ? 1 : 0,
-      duration: 180,
-      useNativeDriver: false,
-    }).start();
-  }, [focused, value]);
-
   const handleFocus = () => {
     setIsFocused(true);
     onFocus && onFocus();
@@ -63,25 +52,6 @@ const DatePicker: React.FC<DatePickerProps> = ({
     }
   };
 
-  const labelStyle = {
-    position: 'absolute' as const,
-    left: 20,
-    top: animated.interpolate({
-      inputRange: [-0.3, 1],
-      outputRange: [18, -10],
-    }),
-    fontSize: animated.interpolate({
-      inputRange: [0, 1],
-      outputRange: [16, 12],
-    }),
-    color: animated.interpolate({
-      inputRange: [0, 1],
-      outputRange: ['#aaa', borderColor],
-    }),
-    backgroundColor: backgroundColor,
-    zIndex: 2,
-  };
-
   return (
     <View
       style={[
@@ -90,14 +60,13 @@ const DatePicker: React.FC<DatePickerProps> = ({
         { borderColor: focused ? borderColor : '#cccccc', borderWidth: 1 },
       ]}
     >
-      <Animated.Text style={labelStyle}>{placeholder}</Animated.Text>
       <TextInput
         value={value ? value.toISOString().slice(0, 10) : ''}
         style={[
           styles.input,
           { color: textColor, textAlignVertical: 'center', paddingTop: 0, paddingBottom: 0 },
         ]}
-        placeholder={focused ? '' : placeholder}
+        placeholder={placeholder}
         placeholderTextColor={useThemeColor({ light: '#aaa', dark: '#888' }, 'icon')}
         editable={false}
         onFocus={handleFocus}
@@ -131,7 +100,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingLeft: 16,
     paddingRight: 16,
-    borderRadius: 25,
+    borderRadius: 15,
     marginBottom: 15,
     borderWidth: 1,
     position: 'relative',

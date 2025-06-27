@@ -15,7 +15,7 @@ interface GradientButtonProps {
 const GradientButton: React.FC<GradientButtonProps> = ({
   title,
   onPress,
-  gradientColors = ['#205781', '#7AB2D3'],
+  gradientColors = ['#00CAFF', '#00FFDE'],
   textStyle,
   buttonStyle,
   disabled = false, // <-- Add this line

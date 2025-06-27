@@ -127,7 +127,7 @@ export default function LoginScreen() {
             <ThemedText>or</ThemedText>
               <TouchableOpacity
                 onPress={() => router.push('/register')}>
-                <ThemedView style={styles.circularButton} type='primary'>
+                <ThemedView style={styles.circularButton} color='primary'>
                   <Image
                     source={require('../assets/icons/google.png')}
                     style={{ width: 30, height: 30 }}

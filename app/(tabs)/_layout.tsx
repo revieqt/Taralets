@@ -6,7 +6,6 @@ import TabBarBackground from '@/components/ui/TabBarBackground';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
-// Custom tabBarIcon wrapper to add top border when focused
 function TabBarIconWithTopBorder({ name, color, focused, activeColor }: { name: any, color: string, focused: boolean, activeColor: string }) {
   return (
     <View style={{
@@ -19,20 +18,20 @@ function TabBarIconWithTopBorder({ name, color, focused, activeColor }: { name: 
       height: 38,
       width: 38,
       marginTop: 8,
+      borderRadius: 3, // Rounded corners for the icon container
     }}>
       <AntDesign size={20} name={name} color={color} />
     </View>
   );
 }
 
-// Custom label to move the title down a bit
 function TabBarLabel({ children, color }: { children: React.ReactNode, color: string }) {
   return (
     <Text style={{
       fontFamily: 'Roboto',
       fontSize: 11,
       color,
-      marginTop: 5, // Move the label down
+      marginTop: 5,
       textAlign: 'center',
     }}>
       {children}

@@ -65,7 +65,7 @@ export function Collapsible({ children, title }: PropsWithChildren & { title: st
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    borderRadius: 8,
+    borderRadius: 15,
     borderColor: '#ccc',
     borderWidth: 1,
   },
