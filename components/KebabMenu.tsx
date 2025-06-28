@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, TouchableOpacity, Text, Modal, StyleSheet, Pressable } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
+import { ThemedIcons } from '@/components/ThemedIcons';
 
 export interface KebabAction {
   label: string;
@@ -23,7 +23,7 @@ const KebabMenu: React.FC<KebabMenuProps> = ({ actions }) => {
   return (
     <View>
       <TouchableOpacity onPress={() => setVisible(true)} style={styles.kebabButton}>
-        <MaterialIcons name="more-vert" size={24} color="black" />
+        <ThemedIcons library='MaterialIcons' name="more-vert" size={24}/>
       </TouchableOpacity>
 
       <Modal

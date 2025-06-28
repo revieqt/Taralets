@@ -95,20 +95,6 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="emergency"
-        options={{
-          title: "Emergency",
-          tabBarIcon: ({ color, focused }) => (
-            <TabBarIconWithTopBorder
-              name="exclamationcircleo"
-              color={color}
-              focused={focused}
-              activeColor={activeColor}
-            />
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="profile"
         options={{
           title: "Profile",

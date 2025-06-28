@@ -514,7 +514,7 @@ const styles = StyleSheet.create({
   options: {
     marginTop: 10,
     padding: 20,
-    gap: 20,
+    gap: 10,
   },
   
   collapsibleChild: {

@@ -193,7 +193,6 @@ const styles = StyleSheet.create({
     padding: 12,
     borderTopWidth: 1,
     borderColor: '#eee',
-    backgroundColor: '#fff',
   },
   sendBtn: {
     paddingVertical: 10,

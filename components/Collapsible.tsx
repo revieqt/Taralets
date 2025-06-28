@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { ThemedIcons } from '@/components/ThemedIcons';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -41,12 +42,21 @@ export function Collapsible({ children, title }: PropsWithChildren & { title: st
   });
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedView
+      style={[
+        styles.container,
+        !isOpen && { borderColor: 'transparent' } // <-- transparent border when collapsed
+      ]}
+    >
       <TouchableOpacity
         style={styles.heading}
         onPress={() => setIsOpen((value) => !value)}
         activeOpacity={0.8}>
         <ThemedText type="defaultSemiBold">{title}</ThemedText>
+        <ThemedIcons
+          library="MaterialIcons"
+          name={isOpen ? 'expand-less' : 'expand-more'}
+          size={24}/>
       </TouchableOpacity>
 
       {/* Animated container */}
@@ -71,6 +81,7 @@ const styles = StyleSheet.create({
   },
   heading: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
     gap: 6,
     borderBottomColor: '#ccc',
