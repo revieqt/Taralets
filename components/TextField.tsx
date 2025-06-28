@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, TextInput, StyleSheet } from 'react-native';
+import { View, TextInput, StyleSheet, TextInputProps } from 'react-native';
 import { useThemeColor } from '@/hooks/useThemeColor';
 
 interface TextFieldProps {
@@ -12,6 +12,7 @@ interface TextFieldProps {
   keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad';
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
   style?: any;
+  onSubmitEditing?: TextInputProps['onSubmitEditing']; // <-- add this
 }
 
 const TextField: React.FC<TextFieldProps> = ({
@@ -24,6 +25,7 @@ const TextField: React.FC<TextFieldProps> = ({
   keyboardType = 'default',
   autoCapitalize = 'none',
   style,
+  onSubmitEditing, // <-- add this
 }) => {
   // Use themed colors
   const backgroundColor = useThemeColor({}, 'primary');
@@ -67,6 +69,7 @@ const TextField: React.FC<TextFieldProps> = ({
         keyboardType={keyboardType}
         autoCapitalize={autoCapitalize}
         underlineColorAndroid="transparent"
+        onSubmitEditing={onSubmitEditing} // <-- add this
       />
     </View>
   );

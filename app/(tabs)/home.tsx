@@ -215,8 +215,8 @@ export default function HomeScreen() {
                 <ThemedText style={{fontSize: 13, fontWeight: 'bold'}}>Chat with Tara!</ThemedText>
                 <ThemedText style={{fontSize: 11}}>you AI Travel Companion</ThemedText>
               </TouchableOpacity>
-              
             </ThemedView>
+            
             <ThemedView color='complimentary2' roundness={15} style={styles.optionsButton}>
               <ThemedText style={{fontSize: 13, fontWeight: 'bold'}}>Travel History</ThemedText>
               <ThemedText style={{fontSize: 11}}>your past travels</ThemedText>
@@ -323,6 +323,11 @@ export default function HomeScreen() {
             label: 'Create Itinerary',
             icon: <MaterialIcons name="playlist-add" size={20} color="#00FFDE" />,
             onPress: () => router.push('/itineraries/create'),
+          },
+          {
+            label: 'Chat with Tara',
+            icon: <MaterialIcons name="chat" size={20} color="#00FFDE" />,
+            onPress: () => router.push('/home/aiChat'),
           },
         ]}
       />

@@ -1,13 +1,19 @@
 import React, { useState, useRef } from 'react';
-import { StyleSheet, View, KeyboardAvoidingView, Platform, FlatList, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { StyleSheet, View, KeyboardAvoidingView, Platform, FlatList, TouchableOpacity, ActivityIndicator, Image } from 'react-native';
+import * as Speech from 'expo-speech';
+import { MaterialIcons } from '@expo/vector-icons';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { ThemedIcons } from '@/components/ThemedIcons';
 import { useAIChat } from '@/hooks/useAIChat';
+import TextField from '@/components/TextField';
+import KebabMenu from '@/components/KebabMenu';
 
 export default function AIChatScreen() {
   const { messages, loading, error, sendMessage, resetChat } = useAIChat();
   const [input, setInput] = useState('');
+  const [ttsEnabled, setTtsEnabled] = useState(false);
   const flatListRef = useRef<FlatList>(null);
 
   const handleSend = () => {
@@ -17,42 +23,84 @@ export default function AIChatScreen() {
     }
   };
 
-  // Scroll to bottom when new message arrives
+  // Speak the latest assistant message if TTS is enabled
+  React.useEffect(() => {
+    if (
+      ttsEnabled &&
+      messages.length > 0 &&
+      messages[messages.length - 1].role === 'assistant'
+    ) {
+      Speech.speak(messages[messages.length - 1].content, { language: 'en' });
+    }
+  }, [messages, ttsEnabled]);
+
   React.useEffect(() => {
     if (flatListRef.current && messages.length > 0) {
       flatListRef.current.scrollToEnd({ animated: true });
     }
   }, [messages]);
 
+  const showIntro = messages.length === 0;
+
   return (
     <ThemedView style={{ flex: 1, padding: 0 }}>
       <ThemedView style={styles.header}>
-        <ThemedText type="title">Tara AI Chat</ThemedText>
-        <TouchableOpacity onPress={resetChat} style={styles.resetBtn}>
-          <ThemedText type="link">Reset</ThemedText>
-        </TouchableOpacity>
+        <ThemedText type="title">Tara</ThemedText>
+        <KebabMenu
+          actions={[
+            {
+              label: ttsEnabled ? 'Disable Text-to-Speech' : 'Enable Text-to-Speech',
+              icon: <MaterialIcons name="record-voice-over" size={20} color="#222" />,
+              onPress: () => setTtsEnabled((prev) => !prev),
+            },
+            {
+              label: 'Reset Chat',
+              icon: <MaterialIcons name="refresh" size={20} color="#222" />,
+              onPress: resetChat,
+            },
+          ]}
+        />
       </ThemedView>
-      <FlatList
-        ref={flatListRef}
-        data={messages}
-        keyExtractor={(_, idx) => idx.toString()}
-        contentContainerStyle={styles.messagesContainer}
-        renderItem={({ item }) => (
-          <View style={[
-            styles.messageBubble,
-            item.role === 'user' ? styles.userBubble : styles.aiBubble
-          ]}>
-            <ThemedText style={item.role === 'user' ? styles.userText : styles.aiText}>
-              {item.content}
-            </ThemedText>
-          </View>
-        )}
-        ListEmptyComponent={
-          <ThemedText style={{ textAlign: 'center', marginTop: 40, color: '#888' }}>
-            Start chatting with Tara AI!
+      {showIntro ? (
+        <ThemedView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 32 }}>
+          <Image
+            source={require('@/assets/images/tara-profile.png')}
+            style={{ width: 80, height: 80, borderRadius: 40, marginBottom: 10}}
+          />
+          <ThemedText type="subtitle" style={{ marginBottom: 10 }}>Hello, I am Tara</ThemedText>
+          <ThemedText style={{ textAlign: 'center', color: '#888' }}>
+            Your personal travel companion. Ask me anything about travel—destinations, tips, weather, and more.
           </ThemedText>
-        }
-      />
+        </ThemedView>
+      ) : (
+        <FlatList
+          ref={flatListRef}
+          data={messages}
+          keyExtractor={(_, idx) => idx.toString()}
+          contentContainerStyle={styles.messagesContainer}
+          renderItem={({ item }) => (
+            <View style={[
+              styles.messageRow,
+              item.role === 'assistant' ? styles.aiRow : styles.userRow
+            ]}>
+              {item.role === 'assistant' && (
+                <Image
+                  source={require('@/assets/images/tara-profile.png')}
+                  style={styles.taraProfile}
+                />
+              )}
+              <View style={[
+                styles.messageBubble,
+                item.role === 'user' ? styles.userBubble : styles.aiBubble
+              ]}>
+                <ThemedText style={item.role === 'user' ? styles.userText : styles.aiText}>
+                  {item.content}
+                </ThemedText>
+              </View>
+            </View>
+          )}
+        />
+      )}
       {loading && (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="small" color="#4300FF" />
@@ -66,18 +114,15 @@ export default function AIChatScreen() {
         keyboardVerticalOffset={80}
       >
         <View style={styles.inputRow}>
-          <TextInput
-            style={styles.input}
+          <TextField
             value={input}
             onChangeText={setInput}
             placeholder="Type your message..."
-            placeholderTextColor="#aaa"
             onSubmitEditing={handleSend}
-            editable={!loading}
-            returnKeyType="send"
+            style={{ flex: 1, marginBottom: 0 }}
           />
           <TouchableOpacity style={styles.sendBtn} onPress={handleSend} disabled={loading || !input.trim()}>
-            <ThemedText style={{ color: '#fff', fontWeight: 'bold' }}>Send</ThemedText>
+            <ThemedIcons library='MaterialIcons' name='send' size={30} color='#00FFDE'/>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -103,8 +148,27 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
     flexGrow: 1,
   },
-  messageBubble: {
+  messageRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
     marginVertical: 6,
+    maxWidth: '100%',
+  },
+  aiRow: {
+    justifyContent: 'flex-start',
+  },
+  userRow: {
+    justifyContent: 'flex-end',
+    alignSelf: 'flex-end',
+  },
+  taraProfile: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    marginRight: 8,
+    backgroundColor: '#eee',
+  },
+  messageBubble: {
     maxWidth: '80%',
     borderRadius: 16,
     padding: 12,
@@ -115,7 +179,7 @@ const styles = StyleSheet.create({
   },
   aiBubble: {
     alignSelf: 'flex-start',
-    backgroundColor: '#E6E6FA',
+    backgroundColor: '#f6f6f6',
   },
   userText: {
     color: '#fff',
@@ -131,24 +195,12 @@ const styles = StyleSheet.create({
     borderColor: '#eee',
     backgroundColor: '#fff',
   },
-  input: {
-    flex: 1,
-    fontSize: 16,
-    backgroundColor: 'transparent',
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#eee',
-    marginRight: 8,
-  },
   sendBtn: {
-    backgroundColor: '#4300FF',
-    borderRadius: 20,
     paddingVertical: 10,
-    paddingHorizontal: 18,
+    paddingHorizontal: 5,
     justifyContent: 'center',
     alignItems: 'center',
+    marginLeft: 8,
   },
   loadingContainer: {
     alignItems: 'center',

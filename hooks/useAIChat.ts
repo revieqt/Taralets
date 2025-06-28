@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 export type ChatMessage = {
   role: 'system' | 'user' | 'assistant';
@@ -17,23 +17,9 @@ export function useAIChat() {
 You are Tara, a fun and friendly AI travel assistant. 
 You help users with anything related to traveling: destinations, planning, weather, places to visit, safety, packing, budgeting, transportation, and tips.
 You do NOT answer questions unrelated to travel. If the user asks something off-topic, do not answer it and kindly remind them that you're only here for travel help.
-Keep your answers short and concise, with a helpful tone, upbeat, and cheerful like a well-traveled friend!
+Make your responses short and concise, with a helpful tone, upbeat, and cheerful like a well-traveled friend! 🌍✈️
     `.trim(),
   };
-
-  // Send Tara's intro message on first mount or after reset
-  useEffect(() => {
-    if (messages.length === 0) {
-      setMessages([
-        {
-          role: 'assistant',
-          content:
-            "Hi! I'm Tara, your friendly travel assistant. Ask me anything about travel—destinations, tips, weather, and more. Where are you off to next? 🌏✈️",
-        },
-      ]);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const sendMessage = async (text: string) => {
     if (!text.trim()) return;
@@ -54,7 +40,7 @@ Keep your answers short and concise, with a helpful tone, upbeat, and cheerful l
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer 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', // 🔐 Replace with secure key
+          'Authorization': 'Bearer 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', // 🔐 Replace with secure key
         },
         body: JSON.stringify({
           model: 'mistralai/mistral-7b-instruct', // ✅ Use any supported model
@@ -62,7 +48,7 @@ Keep your answers short and concise, with a helpful tone, upbeat, and cheerful l
         }),
       });
 
-      const data = await response.json(); 
+      const data = await response.json();
 
       if (!data.choices || !data.choices[0]) {
         throw new Error('Tara didn’t respond. Please try again.');
@@ -83,13 +69,7 @@ Keep your answers short and concise, with a helpful tone, upbeat, and cheerful l
   };
 
   const resetChat = () => {
-    setMessages([
-      {
-        role: 'assistant',
-        content:
-          "Hi! I'm Tara, your friendly travel assistant. Ask me anything about travel—destinations, tips, weather, and more. Where are you off to next? 🌏✈️",
-      },
-    ]);
+    setMessages([]);
     setError(null);
   };
 
