@@ -263,8 +263,25 @@ const Profile = () => {
           </TouchableOpacity>
         </ThemedView>
 
+        <ThemedView style={styles.bioContainer} border='thin-gray' roundness={10}>
+          {
+            userInfo.bio ? (
+              <ThemedText>{userInfo.bio}</ThemedText>
+            ) : (
+              <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: 5, justifyContent: 'center' }}>
+                
+                <ThemedText style={{ color: '#205781' }}>
+                  Add Bio
+                </ThemedText>
+                <ThemedIcons library='Feather' name='pen-tool' size={15}/>
+              </TouchableOpacity>
+            )
+          }
+        </ThemedView>
+
         {/* Options Section */}
         <ThemedView style={styles.options}>
+          <ThemedText type='subtitle'>Settings</ThemedText>
           <Collapsible title="General Information">
             <ThemedView style={styles.collapsibleChild}>
               <ThemedText>Name: {userInfo.fname} {userInfo.mname} {userInfo.lname}</ThemedText>
@@ -557,6 +574,12 @@ const styles = StyleSheet.create({
     position: 'relative',
     height: '100%',
     padding: 20,
+  },
+  bioContainer: {
+    width: '90%',
+    alignSelf: 'center',
+    marginTop: 10,
+    padding: 10,
   },
 });
 

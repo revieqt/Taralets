@@ -40,7 +40,7 @@ Make your responses short and concise, with a helpful tone, upbeat, and cheerful
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer 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', // 🔐 Replace with secure key
+          'Authorization': 'Bearer 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', // 🔐 Replace with secure key
         },
         body: JSON.stringify({
           model: 'mistralai/mistral-7b-instruct', // ✅ Use any supported model

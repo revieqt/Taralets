@@ -41,9 +41,6 @@ export default function HomeScreen() {
   const { info: wikiInfo, image: wikiImage, loading: wikiLoading } = usePlaceInformation(town);
 
   const [infoModalVisible, setInfoModalVisible] = useState(false);
-  const INFO_PREVIEW_LENGTH = 220;
-  const isLongInfo = wikiInfo && wikiInfo.length > INFO_PREVIEW_LENGTH;
-  const infoPreview = isLongInfo ? wikiInfo?.slice(0, INFO_PREVIEW_LENGTH) + '...' : wikiInfo;
 
   const expanded = useSharedValue(false);
   const headerHeight = useSharedValue(HEADER_HEIGHT_COLLAPSED);
@@ -119,12 +116,15 @@ export default function HomeScreen() {
           <Animated.View style={[styles.headerContainer, animatedHeaderStyle]}>
             <View style={styles.topBarContainer}>
               <View style={styles.textFieldWrapper}>
-                <TextField
-                  placeholder="Search"
-                  value={search}
-                  onChangeText={setSearch}
-                  style={styles.translucentTextField}
-                />
+                {!session?.activeRoute && (
+                  <TextField
+                    placeholder="Search"
+                    value={search}
+                    onChangeText={setSearch}
+                    style={styles.translucentTextField}
+                  />
+                )}
+                
               </View>
               <TouchableOpacity
                 style={styles.notifButton}
@@ -221,12 +221,6 @@ export default function HomeScreen() {
               <ThemedText style={{fontSize: 13, fontWeight: 'bold'}}>Travel History</ThemedText>
               <ThemedText style={{fontSize: 11}}>your past travels</ThemedText>
             </ThemedView>
-            <ThemedView color='complimentary3' roundness={15} style={styles.optionsButton}>
-              <ThemedText>Button ni soon</ThemedText>
-            </ThemedView>
-            <ThemedView color='complimentary4' roundness={15} style={styles.optionsButton}>
-              <ThemedText>Button ni soon</ThemedText>
-            </ThemedView>
           </ThemedView>
 
           {/* Tourist Attractions Horizontal FlatList */}
@@ -268,38 +262,27 @@ export default function HomeScreen() {
             )}
           </View>
         </View>
-        <LinearGradient
-          colors={['#0065F8', '#00FFDE']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
+        <ThemedView color='secondary'
           style={styles.infoContainer}
         >
           <ThemedText style={{ color: 'white' }}>About</ThemedText>
           <ThemedText type="subtitle" style={{ color: 'white', marginBottom: 8, fontWeight: 'bold', zIndex: 2 }}>
             {town}
           </ThemedText>
-          <View style={{ maxHeight: 100, overflow: 'hidden', marginBottom: 4, zIndex: 2 }}>
+          <View style={{marginBottom: 4, zIndex: 2 }}>
             <ThemedText style={{ color: 'white', textAlign: 'justify' }}>
-              {wikiLoading ? 'Loading information...' : infoPreview}
+              {wikiLoading ? 'Loading information...' : wikiInfo}
             </ThemedText>
           </View>
-          <View style={{ flexDirection: 'row', marginTop: 8, justifyContent: 'flex-start', gap: 8, zIndex: 2 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'flex-start', gap: 8, zIndex: 2 }}>
             <OutlineButton
               title="Search for Tours"
               onPress={() => {}}
               buttonStyle={{ borderColor: 'white', height: 40, paddingHorizontal: 18, width: 'auto', backgroundColor: 'rgba(255,255,255,.7)' }}
               textStyle={{ fontSize: 14 }}
             />
-            {isLongInfo && (
-              <OutlineButton
-                title="See More"
-                onPress={() => setInfoModalVisible(true)}
-                buttonStyle={{ borderColor: 'white', height: 40, paddingHorizontal: 18, width: 'auto', backgroundColor: 'rgba(255,255,255,.7)' }}
-                textStyle={{ fontSize: 14 }}
-              />
-            )}
           </View>
-        </LinearGradient>
+        </ThemedView>
         <Portal>
           <Modal
             visible={infoModalVisible}
@@ -402,7 +385,7 @@ const styles = StyleSheet.create({
   notifButton: {
     width: 45,
     height: 45,
-    borderRadius: 22,
+    borderRadius: 15,
     backgroundColor: 'rgba(255,255,255,0.7)',
     borderColor: 'gray',
     borderWidth: 1,
@@ -483,8 +466,6 @@ const styles = StyleSheet.create({
     width: '100%',
     padding: 16,
     marginTop: 16,
-    overflow: 'hidden',
-    height: 245,
   },
   touristSpotsContainer: {
     marginTop: 18,
