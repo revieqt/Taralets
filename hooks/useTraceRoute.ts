@@ -5,6 +5,7 @@ import useUserLocation from './useUserLocation';
 export function useTraceRoute() {
   const { userCoordinates, errorMessage } = useUserLocation();
   const [routeCoords, setRouteCoords] = useState<{ latitude: number; longitude: number }[]>([]);
+  const [heading, setHeading] = useState<number | null>(null);
 
   useEffect(() => {
     let subscription: Location.LocationSubscription | undefined;
@@ -16,11 +17,11 @@ export function useTraceRoute() {
       subscription = await Location.watchPositionAsync(
         {
           accuracy: Location.Accuracy.High,
-          timeInterval: 5000, // update more frequently for testing
-          distanceInterval: 5, // update on every meter for testing
+          timeInterval: 5000,
+          distanceInterval: 5,
         },
         (location) => {
-          const { latitude, longitude } = location.coords;
+          const { latitude, longitude, heading: locHeading } = location.coords;
           setRouteCoords((prev) => {
             if (
               prev.length === 0 ||
@@ -28,16 +29,17 @@ export function useTraceRoute() {
               prev[prev.length - 1].longitude !== longitude
             ) {
               const updated = [...prev, { latitude, longitude }];
-              console.log('TraceRoute:', updated);
               return updated;
             }
             return prev;
           });
+          if (typeof locHeading === 'number' && !isNaN(locHeading)) {
+            setHeading(locHeading);
+          }
         }
       );
     };
 
-    // Add the initial location only once if available and not already set
     if (
       userCoordinates.lat !== 0 &&
       userCoordinates.lon !== 0 &&
@@ -51,9 +53,8 @@ export function useTraceRoute() {
     return () => {
       subscription?.remove();
     };
-    // Only run on mount and when userCoordinates changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userCoordinates.lat, userCoordinates.lon]);
 
-  return { routeCoords, errorMessage };
+  return { routeCoords, heading, errorMessage };
 }

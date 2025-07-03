@@ -7,8 +7,12 @@ import {
   serverTimestamp,
   updateDoc,
   arrayUnion,
+  getDocs,
+  query,
+  where,
 } from 'firebase/firestore';
-import { db } from './config'; // Adjust path based on your project structure
+import { db } from './config';
+import { useSession } from '@/context/SessionContext';
 
 const GROUPS_COLLECTION = 'groups';
 const USERS_COLLECTION = 'users';
@@ -50,24 +54,30 @@ export const addGroupToUserInfo = async (userId: string, groupId: string): Promi
   });
 };
 
-export const getGroupMembers = async (groupId: string): Promise<any[]> => {
-  const groupRef = doc(db, GROUPS_COLLECTION, groupId);
+export const getGroupMembers = async (groupId: string) => {
+  const groupRef = doc(db, 'groups', groupId);
   const groupSnap = await getDoc(groupRef);
-
   if (!groupSnap.exists()) return [];
 
-  const groupData = groupSnap.data() as GroupData;
-  const memberIds = groupData.members || [];
+  const groupData = groupSnap.data();
+  const memberIds = Array.isArray(groupData.members) ? groupData.members : [];
 
-  const memberPromises = memberIds.map(async (userId) => {
-    const userRef = doc(db, USERS_COLLECTION, userId);
-    const userSnap = await getDoc(userRef);
-    return userSnap.exists() ? { id: userId, ...userSnap.data() } : null;
-  });
+  if (memberIds.length === 0) return [];
 
-  console.log('memberIds:', memberIds);
-  const members = await Promise.all(memberPromises);
-  return members.filter(Boolean);
+  // Fetch all user docs in parallel
+  const userDocs = await Promise.all(
+    memberIds.map(async (uid) => {
+      const userRef = doc(db, 'users', uid);
+      const userSnap = await getDoc(userRef);
+      if (userSnap.exists()) {
+        return { id: uid, ...userSnap.data() };
+      }
+      return null;
+    })
+  );
+
+  // Filter out any nulls (non-existent users)
+  return userDocs.filter(Boolean);
 };
 
 // ✅ UPDATED createGroup
@@ -116,4 +126,68 @@ export const createGroup = async ({
 
   const messagesCollection = collection(db, CHATS_COLLECTION, groupId, 'messages');
   await addDoc(messagesCollection, welcomeMessage);
+};
+
+
+export const joinGroupByInviteCodeWithUser = async (
+  inviteCode: string,
+  userId: string,
+  updateSession: (newData: Partial<any>) => Promise<void>
+): Promise<{ success: boolean; message: string }> => {
+  try {
+    // Find group by invite code
+    const groupsRef = collection(db, GROUPS_COLLECTION);
+    const q = query(groupsRef, where('inviteCode', '==', inviteCode));
+    const querySnapshot = await getDocs(q);
+
+    if (querySnapshot.empty) {
+      return { success: false, message: 'No group found with that invite code.' };
+    }
+
+    const groupDoc = querySnapshot.docs[0];
+    const groupId = groupDoc.id;
+    const groupData = groupDoc.data() as GroupData;
+
+    // Add user to group's members array if not already present
+    const groupRef = doc(db, GROUPS_COLLECTION, groupId);
+    const updatedMembers = groupData.members?.includes(userId)
+      ? groupData.members
+      : [...(groupData.members || []), userId];
+    await updateDoc(groupRef, { members: updatedMembers });
+
+    // Add groupId to user's groups array in Firestore
+    const userRef = doc(db, USERS_COLLECTION, userId);
+    const userSnap = await getDoc(userRef);
+    if (userSnap.exists()) {
+      const userData = userSnap.data();
+      // If groups field doesn't exist, create it as an array with groupId
+      if (!Array.isArray(userData.groups)) {
+        await updateDoc(userRef, { groups: [groupId] });
+      } else {
+        await updateDoc(userRef, { groups: arrayUnion(groupId) });
+      }
+    } else {
+      // If user doc doesn't exist, do nothing or handle as needed
+      return { success: false, message: 'User not found.' };
+    }
+
+    // Update SessionContext (add groupId to user's groups array)
+    if (typeof updateSession === 'function') {
+      await updateSession((prev: any) => {
+        const prevGroups = prev?.user?.groups || [];
+        return {
+          user: {
+            ...prev.user,
+            groups: prevGroups.includes(groupId)
+              ? prevGroups
+              : [...prevGroups, groupId],
+          },
+        };
+      });
+    }
+
+    return { success: true, message: 'Successfully joined the group!' };
+  } catch (err: any) {
+    return { success: false, message: err.message || 'Failed to join group.' };
+  }
 };

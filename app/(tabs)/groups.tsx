@@ -1,4 +1,4 @@
-import { StyleSheet, Image, Platform, View, ScrollView, TouchableOpacity, Text } from 'react-native';
+import { StyleSheet, Image, Platform, View, ScrollView, TouchableOpacity } from 'react-native';
 import { useState, useRef, useEffect } from 'react';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -28,6 +28,10 @@ export default function GroupScreen() {
 
   const [chatModalVisible, setChatModalVisible] = useState(false);
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
+  const handleCloseViewModal = () => {
+    setViewModalVisible(false);
+    setSelectedGroup(null);
+  };
 
   useEffect(() => {
     if (activeTab !== 1) return;
@@ -96,10 +100,8 @@ export default function GroupScreen() {
                     key={group?.inviteCode || idx}
                     style={styles.groupItem}
                     onPress={() => {
-                      router.push({
-                        pathname: '/groups/view',
-                        params: { groupId: group.id, groupName: group.name, inviteCode: group.inviteCode }
-                      });
+                      setSelectedGroup(group);
+                      setViewModalVisible(true);
                     }}
                   >
                     <ThemedText type="default">{group?.name || 'Unnamed Group'}</ThemedText>
@@ -163,7 +165,13 @@ export default function GroupScreen() {
           onClose={() => setJoinModalVisible(false)}
         />
 
-        <ChatModal
+        <ViewGroupModal
+          visible={viewModalVisible}
+          group={selectedGroup}
+          onClose={handleCloseViewModal}
+        />
+
+        <ChatModal  
           visible={chatModalVisible}
           chatId={activeChatId || ''}
           onClose={() => setChatModalVisible(false)}

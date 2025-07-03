@@ -2,7 +2,7 @@ import { StyleSheet, View, TouchableOpacity, Image, Dimensions, FlatList } from 
 import { useRouter } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import TaraMap from '@/components/TaraMap';
+import TaraMap from '@/components/maps/TaraMap';
 import VerticalRule from '@/components/VerticalRule';
 import TextField from '@/components/TextField';
 import NotificationModal from '@/components/modals/NotificationModal';
@@ -128,15 +128,17 @@ export default function HomeScreen() {
               </View>
               <TouchableOpacity
                 style={styles.notifButton}
-                onPress={() => setNotifVisible(true)}
+                onPress={() => router.push('/home/notifications')}
                 activeOpacity={0.7}
               >
                 <AntDesign name="bells" size={22} color="#fff" />
               </TouchableOpacity>
             </View>
             <Animated.View style={[styles.mapContainer, animatedMapContainerStyle, { zIndex: 1 }]}>
-              {showLiveTracking ? (
-                <LiveTrackingMap routeId={session?.activeRoute?.routeID} is3D={is3DView} />
+              {is3DView ? (
+                <LiveTrackingMap is3D={true} routeId={session?.activeRoute?.routeID} />
+              ) : showLiveTracking ? (
+                <LiveTrackingMap routeId={session?.activeRoute?.routeID} is3D={false} />
               ) : (
                 <TaraMap
                   region={{

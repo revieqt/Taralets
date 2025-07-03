@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView, Dimensions, Text } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { View, StyleSheet, TouchableOpacity, ScrollView, Dimensions, Text, Modal } from 'react-native';
+import { useRouter } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { AntDesign } from '@expo/vector-icons';
@@ -9,10 +9,21 @@ import { getGroupMembers } from '@/services/firestore/groupDbService';
 import ChatModal from '../groups/chat';
 
 const screenHeight = Dimensions.get('window').height;
+const screenWidth = Dimensions.get('window').width;
 
-export default function ViewGroupScreen() {
+interface ViewGroupModalProps {
+  visible: boolean;
+  group: any;
+  onClose: () => void;
+}
+
+export default function ViewGroupModal({ visible, group, onClose }: ViewGroupModalProps) {
+  if (!visible || !group) return null;
   const router = useRouter();
-  const { groupId, groupName, inviteCode } = useLocalSearchParams();
+
+  const groupId = group?.id;
+  const groupName = group?.name;
+  const inviteCode = group?.inviteCode;
 
   const [activeTab, setActiveTab] = useState(0);
   const [members, setMembers] = useState<any[]>([]);
@@ -24,8 +35,12 @@ export default function ViewGroupScreen() {
     if (activeTab === 1 && groupId) {
       setLoadingMembers(true);
       getGroupMembers(groupId as string)
-        .then((data) => setMembers(data))
-        .catch(() => setMembers([]))
+        .then((data) => {
+          setMembers(data);
+        })
+        .catch(() => {
+          setMembers([]);
+        })
         .finally(() => setLoadingMembers(false));
     }
   }, [activeTab, groupId]);
@@ -40,70 +55,94 @@ export default function ViewGroupScreen() {
     }
   }, [activeTab, groupId]);
 
+  // Overlay modal for full screen
   return (
-    <ThemedView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <View style={styles.backButton}>
-            <View style={styles.backIcon}>
-              <AntDesign name="left" size={15} color="white" />
-            </View>
-            <Text style={{ marginRight: 10, color: 'white' }}>Back</Text>
-          </View>
-        </TouchableOpacity>
+    <Modal
+      visible={visible}
+      animationType="slide"
+      transparent
+      onRequestClose={onClose}
+    >
+      <View style={styles.overlay}>
+        <ThemedView style={styles.container}>
+          <ScrollView showsVerticalScrollIndicator={false}>
+            <TouchableOpacity onPress={onClose}>
+              <View style={styles.backButton}>
+                <View style={styles.backIcon}>
+                  <AntDesign name="left" size={15} color="white" />
+                </View>
+                <Text style={{ marginRight: 10, color: 'white' }}>Back</Text>
+              </View>
+            </TouchableOpacity>
 
-        <View style={styles.content}>
-          <ThemedText type="title">{groupName || 'Group Info'}</ThemedText>
-          <ThemedText type='default'>Invite Code: {inviteCode}</ThemedText>
+            <View style={styles.content}>
+              <ThemedText type="title">{groupName || 'Group Info'}</ThemedText>
+              <ThemedText type='default'>Invite Code: {inviteCode}</ThemedText>
 
-          <TabChooser
-            tabs={['Itinerary', 'Members', 'Chat']}
-            onTabChange={setActiveTab}
-            containerStyle={{ marginTop: 20, marginBottom: 10 }}
-          />
+              <TabChooser
+                tabs={['Itinerary', 'Members', 'Chat']}
+                onTabChange={setActiveTab}
+                containerStyle={{ marginTop: 20, marginBottom: 10 }}
+              />
 
-          {activeTab === 0 && (
-            <ThemedText type='defaultSemiBold' style={{ marginTop: 10, height: 500 }}>
-              Itinerary
-            </ThemedText>
-          )}
-
-          {activeTab === 1 && (
-            <>
-              <ThemedText type='defaultSemiBold' style={{ marginTop: 10 }}>
-                Members
-              </ThemedText>
-              {loadingMembers ? (
-                <ThemedText style={{ marginTop: 10 }}>Loading members...</ThemedText>
-              ) : members.length === 0 ? (
-                <ThemedText style={{ marginTop: 10 }}>No members found.</ThemedText>
-              ) : (
-                members.map((member, idx) => (
-                  <View key={member.id || idx} style={{ marginTop: 10, marginBottom: 6 }}>
-                    <ThemedText type="default">{member.fname} {member.lname}</ThemedText>
-                    <ThemedText type="default" style={{ fontSize: 12, color: '#888' }}>
-                      {member.email}
-                    </ThemedText>
-                  </View>
-                ))
+              {activeTab === 0 && (
+                <ThemedText type='defaultSemiBold' style={{ marginTop: 10, height: 500 }}>
+                  Itinerary
+                </ThemedText>
               )}
-            </>
-          )}
-        </View>
-      </ScrollView>
 
-      <ChatModal
-        chatId={activeChatId}
-        visible={chatModalVisible}
-        onClose={() => setChatModalVisible(false)}
-      />
-    </ThemedView>
+              {activeTab === 1 && (
+                <>
+                  <ThemedText type='defaultSemiBold' style={{ marginTop: 10 }}>
+                    Members
+                  </ThemedText>
+                  {loadingMembers ? (
+                    <ThemedText style={{ marginTop: 10 }}>Loading members...</ThemedText>
+                  ) : members.length === 0 ? (
+                    <ThemedText style={{ marginTop: 10 }}>No members found.</ThemedText>
+                  ) : (
+                    members.map((member, idx) => (
+                      <View key={member.id || idx} style={{ marginTop: 10, marginBottom: 6 }}>
+                        <ThemedText type="default">{member.fname} {member.lname}</ThemedText>
+                        <ThemedText type="default" style={{ fontSize: 12, color: '#888' }}>
+                          {member.email}
+                        </ThemedText>
+                      </View>
+                    ))
+                  )}
+                </>
+              )}
+            </View>
+          </ScrollView>
+
+          <ChatModal
+            chatId={activeChatId}
+            visible={chatModalVisible}
+            onClose={() => setChatModalVisible(false)}
+          />
+        </ThemedView>
+      </View>
+    </Modal>
   );
 }
 
 const styles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    width: screenWidth,
+    height: screenHeight,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   container: {
     flex: 1,
+    width: screenWidth,
+    height: screenHeight,
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    overflow: 'hidden',
   },
   backButton: {
     position: 'absolute',
@@ -140,5 +179,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
     minHeight: screenHeight / 2,
+    alignSelf: 'center',
+    backgroundColor: '#fff',
   },
 });

@@ -43,6 +43,7 @@ export default function RootLayout() {
           <Stack.Screen name="routes/create" options={{ headerShown: false }} />
           <Stack.Screen name="routes/settings" options={{ headerShown: false }} />
           <Stack.Screen name="home/aiChat" options={{ headerShown: false }} />
+          <Stack.Screen name="home/notifications" options={{ headerShown: false }} />
           <Stack.Screen name="itineraries/itineraries" options={{ headerShown: false}} />
           <Stack.Screen name="itineraries/create" options={{ headerShown: false}} />
           <Stack.Screen name="groups/create" options={{ headerShown: false}} />

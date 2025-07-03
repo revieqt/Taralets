@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { Modal, View, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import { Modal, View, StyleSheet, TouchableOpacity, Dimensions, Alert } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { MaterialIcons } from '@expo/vector-icons';
 import TextField from '@/components/TextField';
 import GradientButton from '@/components/GradientButton';
+import { useSession } from '@/context/SessionContext';
+import { joinGroupByInviteCodeWithUser } from '@/services/firestore/groupDbService';
 
 type JoinGroupModalProps = {
   visible: boolean;
@@ -13,6 +15,26 @@ type JoinGroupModalProps = {
 
 export default function JoinGroupModal({ visible, onClose }: JoinGroupModalProps) {
   const [inviteCode, setInviteCode] = useState('');
+  const [loading, setLoading] = useState(false);
+  const { session, updateSession } = useSession();
+
+  const handleJoin = async () => {
+    if (!inviteCode.trim()) {
+      Alert.alert('Error', 'Please enter an invite code.');
+      return;
+    }
+    if (!session?.user?.id) {
+      Alert.alert('Error', 'No user session found.');
+      return;
+    }
+    setLoading(true);
+    const result = await joinGroupByInviteCodeWithUser(inviteCode.trim(), session.user.id, updateSession);
+    setLoading(false);
+    Alert.alert(result.success ? 'Success' : 'Error', result.message, [
+      { text: 'OK', onPress: () => result.success && onClose() },
+    ]);
+    if (result.success) setInviteCode('');
+  };
 
   return (
     <Modal
@@ -38,9 +60,10 @@ export default function JoinGroupModal({ visible, onClose }: JoinGroupModalProps
             />
 
           <GradientButton
-            title="Join Group"
-            onPress={() => {}}
+            title={loading ? "Joining..." : "Join Group"}
+            onPress={handleJoin}
             buttonStyle={{ marginTop: 8 }}
+            disabled={loading}
           />
         </View>
       </ThemedView>

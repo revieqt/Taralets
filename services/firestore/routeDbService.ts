@@ -2,10 +2,9 @@ import { db } from './config';
 import {
   doc,
   getDoc,
-  setDoc,
-  serverTimestamp,
-  DocumentReference,
-  DocumentData,
+  addDoc,
+  collection,
+  Timestamp,
 } from 'firebase/firestore';
 
 type LocationPoint = {
@@ -52,23 +51,10 @@ export async function getRouteById(routeId: string): Promise<RouteData | null> {
  * @param data - The route data to save.
  * @returns The document reference of the saved route.
  */
-export async function saveRoute(
-  data: Omit<RouteData, 'createdOn'>,
-  routeId?: string
-): Promise<DocumentReference<DocumentData> | null> {
-  try {
-    const docRef = routeId
-      ? doc(db, ROUTES_COLLECTION, routeId)
-      : doc(db, ROUTES_COLLECTION, crypto.randomUUID());
-
-    await setDoc(docRef, {
-      ...data,
-      createdOn: serverTimestamp(),
-    });
-
-    return docRef;
-  } catch (error) {
-    console.error('Error saving route:', error);
-    return null;
-  }
-}
+export const addGroupRoute = async (data: RouteData) => {
+  const routeRef = collection(db, 'routes');
+  await addDoc(routeRef, {
+    ...data,
+    createdOn: Timestamp.fromDate(data.createdOn),
+  });
+};

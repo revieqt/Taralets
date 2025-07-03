@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { StyleSheet, View, KeyboardAvoidingView, Platform, FlatList, TouchableOpacity, ActivityIndicator, Image } from 'react-native';
 import * as Speech from 'expo-speech';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -15,6 +16,7 @@ export default function AIChatScreen() {
   const [input, setInput] = useState('');
   const [ttsEnabled, setTtsEnabled] = useState(false);
   const flatListRef = useRef<FlatList>(null);
+  const router = useRouter();
 
   const handleSend = () => {
     if (input.trim()) {
@@ -96,6 +98,21 @@ export default function AIChatScreen() {
                 <ThemedText style={item.role === 'user' ? styles.userText : styles.aiText}>
                   {item.content}
                 </ThemedText>
+                {item.showGoToRoutes && (
+                  <TouchableOpacity
+                    style={{
+                      marginTop: 8,
+                      backgroundColor: '#4300FF',
+                      borderRadius: 8,
+                      paddingVertical: 6,
+                      paddingHorizontal: 14,
+                      alignSelf: 'flex-start'
+                    }}
+                    onPress={() => router.push('/routes/routes')}
+                  >
+                    <ThemedText style={{ color: '#fff', fontWeight: 'bold' }}>Go to Routes</ThemedText>
+                  </TouchableOpacity>
+                )}
               </View>
             </View>
           )}
