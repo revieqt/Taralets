@@ -123,7 +123,6 @@ export default function RouteView({ id, visible, onClose }: { id: string, visibl
     );
   };
 
-  // Start route
   const handleStartRoute = async () => {
     if (!route) return;
     if (session?.activeRoute) {
@@ -135,6 +134,7 @@ export default function RouteView({ id, visible, onClose }: { id: string, visibl
       await updateDoc(doc(db, 'routes', id), { status: 'active' });
       await updateSession({
         activeRoute: {
+          routeID: id,
           userID: route.userID,
           location: route.location,
           status: 'active',
@@ -150,7 +150,6 @@ export default function RouteView({ id, visible, onClose }: { id: string, visibl
     setStarting(false);
   };
 
-  // End route
   const handleEndRoute = async () => {
     if (!route) return;
     setStarting(true);

@@ -1,24 +1,20 @@
 import { useState } from 'react';
 import { useSession } from '@/context/SessionContext';
 import { addGroupRoute } from '@/services/firestore/routeDbService';
-import { extractFirstJson, removeFirstJson } from '../utils/extractJson';
+import { convertLocationsToRouteJson } from '@/services/googlePlacesService';
+import { extractFirstJson, removeFirstJson } from '@/utils/extractJson';
 
 export type ChatMessage = {
   role: 'system' | 'user' | 'assistant';
   content: string;
-  showGoToRoutes?: boolean; // <-- add this
+  showGoToRoutes?: boolean;
 };
 
-interface Location {
-  latitude: number;
-  longitude: number;
-  locationName: string;
-}
-
-interface AIResponse {
+interface AIPlaceNameResponse {
   action: 'create_route';
-  status: 'active' | 'pending';
-  locations: Location[];
+  locations: {
+    locationName: string;
+  }[];
 }
 
 export function useAIChat() {
@@ -27,7 +23,6 @@ export function useAIChat() {
   const [error, setError] = useState<string | null>(null);
   const { session } = useSession();
 
-  // Tara's personality and topic restriction
   const systemPrompt: ChatMessage = {
     role: 'system',
     content: `
@@ -35,8 +30,15 @@ You are Tara, a fun and friendly AI travel assistant.
 You help users with anything related to traveling: destinations, planning, weather, places to visit, safety, packing, budgeting, transportation, and tips.
 You do NOT answer questions unrelated to travel. If the user asks something off-topic, do not answer it and kindly remind them that you're only here for travel help.
 Make your responses short and concise, with a helpful tone, upbeat, and cheerful like a well-traveled friend! 🌍✈️
-If the user wants to create a travel route, respond ONLY with this JSON structure:
-{"action":"create_route","status":"active","locations":[{"latitude":14.5995,"longitude":120.9842,"locationName":"Manila"},{"latitude":16.4023,"longitude":120.596,"locationName":"Baguio"}]}
+When the user wants to create a travel route, respond ONLY with this JSON structure (place names only):
+{
+  "action": "create_route",
+  "locations": [
+    { "locationName": "Manila" },
+    { "locationName": "San Fernando, Pampanga" },
+    { "locationName": "Baguio City" }
+  ]
+}
 `.trim(),
   };
 
@@ -49,7 +51,6 @@ If the user wants to create a travel route, respond ONLY with this JSON structur
     };
 
     const updatedMessages = [...messages, newUserMessage];
-
     setMessages(updatedMessages);
     setLoading(true);
     setError(null);
@@ -59,8 +60,8 @@ If the user wants to create a travel route, respond ONLY with this JSON structur
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer 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',
-          'HTTP-Referer': 'https://tarag.app/' // required by OpenRouter
+          'Authorization': 'Bearer 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',
+          'HTTP-Referer': 'https://tarag.app/' // Required by OpenRouter
         },
         body: JSON.stringify({
           model: 'mistralai/mistral-7b-instruct',
@@ -77,38 +78,30 @@ If the user wants to create a travel route, respond ONLY with this JSON structur
       let content = data.choices[0].message.content.trim();
       let showGoToRoutes = false;
 
-      // Check if it's a route command and try parsing it
       if (content.includes('create_route')) {
         try {
           const jsonString = extractFirstJson(content);
           if (!jsonString) throw new Error('No JSON found in AI response');
-          const parsed: AIResponse = JSON.parse(jsonString);
+          const parsed: AIPlaceNameResponse = JSON.parse(jsonString);
 
           if (session?.user) {
-            await addGroupRoute({
-              createdOn: new Date(),
-              status: parsed.status,
-              userID: session.user.id,
-              location: parsed.locations,
-            });
+            const finalRoute = await convertLocationsToRouteJson(parsed.locations, session.user.id);
+            await addGroupRoute(finalRoute);
             showGoToRoutes = true;
-          } else {
-            console.warn('No session user found');
           }
 
-          // Remove the JSON from the AI's reply before displaying
+          // Remove the JSON part from the reply if needed
           content = removeFirstJson(content).trim();
-
-          // If nothing left after removing JSON, show a default message
           if (!content) {
-            content = "Route created! 🚗";
+            content = 'Route created successfully! 🚗';
           }
         } catch (err) {
+          console.error('Route processing error:', err);
           setMessages((prev) => [
             ...prev,
             {
               role: 'assistant',
-              content: 'Sorry, I could not process the route request.',
+              content: 'Sorry, I couldn’t process the route properly.',
             },
           ]);
           setLoading(false);
@@ -116,15 +109,12 @@ If the user wants to create a travel route, respond ONLY with this JSON structur
         }
       }
 
-      // Add the AI reply (with JSON removed if present) to the chat
-      if (content) {
-        const aiReply: ChatMessage = {
-          role: 'assistant',
-          content,
-          ...(showGoToRoutes ? { showGoToRoutes: true } : {}),
-        };
-        setMessages((prev) => [...prev, aiReply]);
-      }
+      const aiReply: ChatMessage = {
+        role: 'assistant',
+        content,
+        ...(showGoToRoutes ? { showGoToRoutes: true } : {}),
+      };
+      setMessages((prev) => [...prev, aiReply]);
     } catch (err: any) {
       setError(err.message || 'Something went wrong.');
     } finally {

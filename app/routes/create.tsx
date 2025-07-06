@@ -133,7 +133,6 @@ export default function CreateRouteScreen() {
       Alert.alert('Error', 'Please select both start and end points.');
       return;
     }
-    // Prevent starting a route if there is already an activeRoute in session
     if (status === 'active' && session?.activeRoute) {
       Alert.alert('You already have an active route. Please finish it before starting a new one.');
       return;
@@ -145,7 +144,6 @@ export default function CreateRouteScreen() {
       end,
     ];
 
-    // Fetch location names for all points
     const locationsWithNames = await Promise.all(
       locationArr.map(async (loc, idx) => ({
         ...loc,
