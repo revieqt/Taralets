@@ -263,6 +263,7 @@ const TaraMap: React.FC<TaraMapProps> = ({
   return (
     <View style={{ flex: 1 }}>
       <MapView
+        mapType='terrain'
         ref={mapRef}
         style={[styles.map, mapStyle]}
         provider={PROVIDER_GOOGLE}
